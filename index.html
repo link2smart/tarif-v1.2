@@ -149,15 +149,15 @@
                         const errorText = await res.text();
                         // DÉTECTION INTELLIGENTE DE L'ERREUR D'EXPIRATION
                         // Si le token est expiré et qu'on n'a pas pu le rafraîchir (pas de refresh token sur ce device)
-                        if (errorText.includes("expired_access_token")) {
-                            throw new Error("⚠️ Session expirée sur cet appareil. Le Token Dropbox est invalide. Veuillez vous reconnecter en Admin > Paramètres pour rétablir l'accès.");
+                        if (errorText.includes("expired_access_token") || errorText.includes("invalid_access_token")) {
+                            throw new Error("EXPIRED_TOKEN_ALERT");
                         }
                         throw new Error(errorText);
                     }
                     return res;
 
                 } catch (err) {
-                    if (retries > 0) { await delay(1000); return await doRequest(token, retries - 1); }
+                    if (retries > 0 && err.message !== "EXPIRED_TOKEN_ALERT") { await delay(1000); return await doRequest(token, retries - 1); }
                     throw err;
                 }
             };
@@ -461,7 +461,16 @@
                     if (!silent) { setSyncLog("✅ Données à jour."); setSyncStatus('success'); }
                 } catch (e) {
                     console.error("Sync error", e);
-                    if (!silent) { setSyncLog("⚠️ Erreur Sync : " + e.message); setSyncStatus('error'); }
+                    if (e.message === "EXPIRED_TOKEN_ALERT") {
+                        if (!silent) { 
+                            setSyncLog("⚠️ Token de secours expiré. Impossible de charger les données initiales.");
+                            setSyncStatus('error');
+                            // On force l'ouverture de la config pour permettre une réparation manuelle
+                            setShowConfigModal(true);
+                        }
+                    } else {
+                        if (!silent) { setSyncLog("⚠️ Erreur Sync : " + e.message); setSyncStatus('error'); }
+                    }
                 }
             };
 
@@ -804,7 +813,7 @@
                         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full animate-fade">
                                 <h2 className="text-xl font-bold mb-2">Configuration Initiale</h2>
-                                <p className="text-slate-500 text-sm mb-6">Token manquant. Si vous êtes admin, configurez-le.</p>
+                                <p className="text-slate-500 text-sm mb-6">Token manquant ou expiré. Si vous êtes admin, configurez-le.</p>
                                 <input type="password" placeholder="Token Dropbox..." className="w-full p-3 border rounded-xl mb-4 text-sm font-mono outline-none focus:ring-2 focus:ring-blue-500" value={dbxConfig.token} onChange={e => setDbxConfig({...dbxConfig, token: e.target.value})} />
                                 <button onClick={() => { if(dbxConfig.token) { setShowConfigModal(false); loadCloudDatabase(); } }} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Valider</button>
                             </div>
@@ -825,6 +834,12 @@
                             <p className="text-slate-500 font-medium text-sm">Portail Unifié CMGP-CAS</p>
                         </div>
                         <form onSubmit={handleLogin} className="space-y-4">
+                            {syncStatus === 'error' && (
+                                <div className="bg-red-50 text-red-500 p-3 rounded-xl text-xs text-center font-bold border border-red-100 flex flex-col items-center gap-1">
+                                    <span>⚠️ {syncLog}</span>
+                                    <button type="button" onClick={() => setShowConfigModal(true)} className="underline text-red-700 hover:text-red-900 mt-1">Configurer le token</button>
+                                </div>
+                            )}
                             {loginError && <div className="bg-red-50 text-red-500 p-3 rounded-xl text-sm text-center font-bold border border-red-100">{loginError}</div>}
                             <input className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-700" value={loginForm.username} onChange={e => setLoginForm({...loginForm, username: e.target.value})} placeholder="Identifiant" />
                             <input type="password" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-700" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="Mot de passe" />
