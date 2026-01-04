@@ -64,7 +64,6 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         // --- SECURITE (OBFUSCATION) ---
-        // Utilisé uniquement pour les clés statiques (App Key/Secret)
         const _d = (s) => { 
             if(!s) return "";
             if(s.startsWith("AIza")) return s; 
@@ -72,27 +71,23 @@
         };
 
         // --- CONFIGURATION PERMANENTE (ADMIN) ---
-        // 1. App Key et Secret (Déjà encodés, ne pas toucher)
         const HARDCODED_APP_KEY = "MGp4ZTNoNWhqOXZtMmxr"; 
         const HARDCODED_APP_SECRET = "dzM5c3VubWMxMGlhY3Ju"; 
 
-        // 2. REFRESH TOKEN : COLLEZ VOTRE TOKEN ICI (EN TEXTE CLAIR)
-        // Récupérez-le depuis l'onglet Admin > Paramètres de votre version qui fonctionne
+        // 2. REFRESH TOKEN
         const HARDCODED_REFRESH_TOKEN = "DCsa3Hnd2VEAAAAAAAAB88Sq02Sff3aNDDJcsnQQxzw"; 
 
-        // 3. Clé Gemini (Facultatif)
+        // 3. Clé Gemini
         const HARDCODED_GEMINI_KEY = "";   
 
-        // Token de secours (Utilisé uniquement pour le tout premier affichage si le reste échoue)
+        // Token de secours
         const HARDCODED_DBX_TOKEN = "sl.u.AGO-7_zCj-hNeU0YQyySLMi4xSMWWJTtlmLpRol3vvQqh9jsbrtRYLcoYcwpOBNaoIXUpMuHSSrsLD49bMUsuPicrOrNUeN8jA_0xgE1kWOqlxiad1G2uDIgSeB5KYw_uaYbjXMz62_5-cQsg8ytycl3EW31fKDT-V82OxGzGwSBLba22gbLUGp_u7LY-dqM5iHl-_LbC81V5AoV8oqnQU19yV0v_hKf54ORsdTCLkYMau3en8znWUb1HqpbNyPaGpPK7QTeFlMdGzMovdb6RelRW_l993BXcXUuhWzLYsNj_jeOAsfP47pagoDuINkLP7WY1dor2s9KTktI_xj1qBAhqAiR2KNqK_zmdg-n53KGO7le8Wa5yI1ByXcAogxoj7w5bnQQEQIhMqknhct0enXAhiCoCGmt6C0tSX6V9gnCasRsJwLxWvjvfCnePN3mL10Iiz_YeBRzlq7WUBteKCl33kUWczxmGAyALMDMpiUzbb4CWkZen9ozyGDSzPfKbDCjVB_mThFw6EEV7ZlO1HCfjPEwdRU_VJuGpt7h2VvpekakEZoQQRuUuw7SNnpbQ05dEN-0G2U2B_Ghj8VgZOib79TW1RWwahwH7xdS9MZxvA87M047YapzKE-w7CsowE-iKuJHs2Ys2QTH83SkNEbFgqE8xP6uSEO5xsVfEXGD904m4zLGNSy0bz8FDr65Uy2ow_YMZRQ0bpyd-lEdDo2XwRW0nRtZJOtOvIdwIiSGSC5xuF_pEY1SazEy2n9SP8M0Oz8ZT0EvS-T2k1qO52d8eyEpmWXMHW9K2jYdwK-dnH8CdVHOQC84GXIJ-2ko5dOB5UwWdWa4gdwMABwCHRladxUU5fwDQy3BnVZfQSPG5zFWB0XIvLgNSSY3A3SRAQmI-_fJzA7B0YTUFZXXlYn3X4ba3s5gsPMH4oyXxWXk3KOopEtbfOv7KAmCvvtVO7MGN10ts2YjVZ8XD3fHJexU0GKBUAbn4xVOV17lEBp9xWAB9p9Mil8XzhXv2c0jFlxYxHrH1gDb855-QUem9ddDe6eXwO_Ax6xpQnPztWYEq12nXkPAeNbqxF_-WjUkiR9miRsbuUVEA_LqMGQAHRFoYlLnnaCLdPIFZftUUkckzC2QTzIkQ795BohuMgWCzMb4cIUbwTqlcIEI4rvdU6SgUIthuhNu5FTatgJDVCaobZolJG5OQRasXZ7l6cmo6mdGYqkga9uYEiZglilW9TzACoC0RdAjKA_rpK7EPLdk0YYig838iXhz883Xjpqz1XNCa7ixtYf5I2kHO3upU1OZ"; 
         
-        // Comptes par défaut
         const DEFAULT_USERS = [
             { id: 'admin', pass: 'admin', role: 'admin', name: 'Administrateur', searchCount: 0 },
             { id: 'collab', pass: '1234', role: 'viewer', name: 'Collaborateur', searchCount: 0 }
         ];
 
-        // --- CITATIONS ---
         const QUOTES = [
             { text: "La seule façon de faire du bon travail est d'aimer ce que vous faites.", author: "Steve Jobs" },
             { text: "Le succès n'est pas final, l'échec n'est pas fatal : c'est le courage de continuer qui compte.", author: "Winston Churchill" },
@@ -131,61 +126,46 @@
         };
 
         // --- API MANAGER ---
-        // Remplace fetchWithRetry pour intégrer le refresh automatique
         const apiFetch = async (url, options, config, setConfig) => {
-            // Fonction interne récursive
             const doRequest = async (token, retries = 3) => {
                 const headers = { ...options.headers };
                 if (token) headers['Authorization'] = `Bearer ${token}`;
 
                 try {
                     const res = await fetch(url, { ...options, headers });
-                    
-                    // 1. Gestion Expiration Token (401)
                     if (res.status === 401 && config.refreshToken && config.appKey && config.appSecret) {
                         console.warn("Token expiré (401). Tentative de rafraîchissement...");
                         const newToken = await refreshAccessToken(config.refreshToken, config.appKey, config.appSecret);
                         if (newToken) {
-                            // Sauvegarde du nouveau token
                             const newConfig = { ...config, token: newToken };
                             setConfig(newConfig);
                             localStorage.setItem('tdbx_config', JSON.stringify(newConfig));
-                            // Retry immédiat avec le nouveau token
                             return await doRequest(newToken, retries);
                         }
                     }
-
-                    // 2. Gestion Rate Limit (429) ou Erreur Serveur (5xx)
                     if (!res.ok && (res.status === 429 || res.status >= 500)) {
                         if (retries > 0) {
                             await delay(1500);
                             return await doRequest(token, retries - 1);
                         }
                     }
-                    
-                    // 3. Autres erreurs ou succès
                     if (!res.ok) {
                         const errorText = await res.text();
-                        // DÉTECTION INTELLIGENTE DE L'ERREUR D'EXPIRATION
                         if (errorText.includes("expired_access_token") || errorText.includes("invalid_access_token")) {
                             throw new Error("EXPIRED_TOKEN_ALERT");
                         }
                         throw new Error(errorText);
                     }
                     return res;
-
                 } catch (err) {
                     if (retries > 0 && err.message !== "EXPIRED_TOKEN_ALERT") { await delay(1000); return await doRequest(token, retries - 1); }
                     throw err;
                 }
             };
             
-            // Premier appel avec le token actuel. 
-            // Si on a un refresh token hardcodé mais pas de token valide, on tente le refresh d'abord
             let currentToken = config.token;
             if (!currentToken && config.refreshToken && config.appKey && config.appSecret) {
                  try {
-                     console.log("Initialisation via Refresh Token Hardcodé...");
                      const refreshed = await refreshAccessToken(config.refreshToken, config.appKey, config.appSecret);
                      if(refreshed) {
                          currentToken = refreshed;
@@ -193,7 +173,6 @@
                      }
                  } catch(e) { console.warn("Echec init refresh", e); }
             }
-
             return doRequest(currentToken);
         };
 
@@ -322,7 +301,7 @@
             // Initialisation de la config avec décodage
             const [dbxConfig, setDbxConfig] = useState({ 
                 token: HARDCODED_DBX_TOKEN, 
-                refreshToken: HARDCODED_REFRESH_TOKEN || '', // Direct value, no decoding for refresh token to avoid errors
+                refreshToken: HARDCODED_REFRESH_TOKEN || '', // Direct value
                 appKey: _d(HARDCODED_APP_KEY) || '', 
                 appSecret: _d(HARDCODED_APP_SECRET) || '', 
                 pathTarifs: '/Tarifs', 
@@ -338,12 +317,15 @@
             const [isUploading, setIsUploading] = useState(false);
             const [showQuoteModal, setShowQuoteModal] = useState(false);
             const [currentQuote, setCurrentQuote] = useState(null);
-            const [showConfigModal, setShowConfigModal] = useState(false); // Ajout variable manquante
+            const [showConfigModal, setShowConfigModal] = useState(false); 
 
-            // NOUVEAU : ETAT POUR LE VISUALISATEUR (PDF.js)
+            // CALCULATRICE STATE
+            const [calcState, setCalcState] = useState({ show: false, product: null, basePrice: 0, baseLabel: '' });
+            const [extraDiscount, setExtraDiscount] = useState('');
+
+            // VISUALISATEUR STATE
             const [viewingFile, setViewingFile] = useState(null);
             const [isFileLoading, setIsFileLoading] = useState(false);
-            // État spécifique pour PDF.js (pagination, zoom)
             const [pdfState, setPdfState] = useState({ pdfDoc: null, pageNum: 1, numPages: 0, scale: 1.0 });
             const canvasRef = useRef(null);
 
@@ -351,8 +333,8 @@
             const [showAdminUploadModal, setShowAdminUploadModal] = useState(false);
             const [adminUploadMode, setAdminUploadMode] = useState('new');
             const [targetTarifId, setTargetTarifId] = useState('');
-            const [authCode, setAuthCode] = useState(''); // Code OAuth
-            const [t4Value, setT4Value] = useState(0); // Nouveau state pour T4 Input
+            const [authCode, setAuthCode] = useState(''); 
+            const [t4Value, setT4Value] = useState(0);
             
             // USER EDIT UI
             const [editingUserIdx, setEditingUserIdx] = useState(null);
@@ -373,11 +355,9 @@
 
                 if (storedConfig) {
                     const parsed = JSON.parse(storedConfig);
-                    // Priorité au token hardcodé s'il est plus récent ou présent
                     if(HARDCODED_DBX_TOKEN && !parsed.token) parsed.token = HARDCODED_DBX_TOKEN;
                     
-                    // Gestion de la priorité des clés obfusquées hardcodées
-                    const decodedRefresh = HARDCODED_REFRESH_TOKEN; // No decode
+                    const decodedRefresh = HARDCODED_REFRESH_TOKEN;
                     const decodedKey = _d(HARDCODED_APP_KEY);
                     const decodedSecret = _d(HARDCODED_APP_SECRET);
                     const decodedGemini = _d(HARDCODED_GEMINI_KEY);
@@ -389,11 +369,10 @@
                     
                     setDbxConfig(parsed);
                 } else {
-                    // Premier lancement
                     setDbxConfig(prev => ({
                         ...prev, 
                         token: HARDCODED_DBX_TOKEN,
-                        refreshToken: HARDCODED_REFRESH_TOKEN, // No decode
+                        refreshToken: HARDCODED_REFRESH_TOKEN,
                         appKey: _d(HARDCODED_APP_KEY),
                         appSecret: _d(HARDCODED_APP_SECRET),
                         geminiKey: _d(HARDCODED_GEMINI_KEY)
@@ -410,23 +389,15 @@
             useEffect(() => { if(currentUser) localStorage.setItem('tdbx_config', JSON.stringify(dbxConfig)); }, [dbxConfig, currentUser]);
             useEffect(() => { if(currentUser) localStorage.setItem('tdbx_users', JSON.stringify(users)); }, [users, currentUser]);
 
-            // --- AUTO REFRESH (POLLING & STARTUP) ---
+            // --- AUTO REFRESH ---
             useEffect(() => {
                 let interval;
-                // MODIFICATION : On autorise le chargement si on est connecté OU si on est sur la page de login (pour charger les users)
-                // ET si on a soit un token, soit un moyen d'en avoir (refreshToken)
                 if ((currentUser || view === 'login') && (dbxConfig.token || (dbxConfig.refreshToken && dbxConfig.appKey))) {
-                    // Chargement initial (sauf si on a déjà des données et qu'on est juste en navigation, mais sur login on force pour avoir les users)
-                    if(tarifs.length === 0 || view === 'login') loadCloudDatabase(view !== 'login'); // Silent seulement si déjà connecté
-
-                    // Polling toutes les 60s
-                    interval = setInterval(() => {
-                        console.log("Auto-refreshing data...");
-                        loadCloudDatabase(true); 
-                    }, 60000);
+                    if(tarifs.length === 0 || view === 'login') loadCloudDatabase(view !== 'login');
+                    interval = setInterval(() => { loadCloudDatabase(true); }, 60000);
                 }
                 return () => clearInterval(interval);
-            }, [currentUser, dbxConfig.token, dbxConfig.refreshToken, view]); // Ajout de 'view' aux dépendances
+            }, [currentUser, dbxConfig.token, dbxConfig.refreshToken, view]);
 
             // --- OAUTH FLOW ---
             const handleExchangeCode = async () => {
@@ -434,23 +405,14 @@
                 setSyncStatus('working');
                 try {
                     const data = await exchangeCodeForToken(authCode, dbxConfig.appKey, dbxConfig.appSecret);
-                    
-                    const newConfig = { 
-                        ...dbxConfig, 
-                        token: data.access_token, 
-                        refreshToken: data.refresh_token // LE SAINT GRAAL
-                    };
+                    const newConfig = { ...dbxConfig, token: data.access_token, refreshToken: data.refresh_token };
                     setDbxConfig(newConfig);
                     localStorage.setItem('tdbx_config', JSON.stringify(newConfig));
-                    
-                    // SAUVEGARDE IMMEDIATE DE LA CONFIG SUR LE CLOUD
-                    // Pour que les autres utilisateurs la récupèrent
                     await saveToCloud(null, null, null, null, newConfig);
-
-                    setSyncLog("✅ Refresh Token configuré et partagé avec succès !");
+                    setSyncLog("✅ Refresh Token configuré et partagé !");
                     setSyncStatus('success');
                     setAuthCode('');
-                    alert("Succès ! Connexion permanente établie et partagée avec l'équipe.\n\nIMPORTANT: Copiez les valeurs affichées dans l'onglet Admin vers le code source pour que cela marche sur de nouveaux appareils !");
+                    alert("Succès !");
                 } catch(e) {
                     setSyncLog("❌ Erreur OAuth : " + e.message);
                     setSyncStatus('error');
@@ -460,70 +422,53 @@
 
             // --- CLOUD OPERATIONS ---
             const saveToCloud = async (newTarifs, newFiches, newHistory, newUsers, specificConfig) => {
-                // On inclut la config (Refresh Token, App Key/Secret) dans la DB partagée
                 const configToSave = specificConfig || {
                     refreshToken: dbxConfig.refreshToken,
                     appKey: dbxConfig.appKey,
                     appSecret: dbxConfig.appSecret,
                     geminiKey: dbxConfig.geminiKey
                 };
-
                 const dataToSave = {
                     meta: { date: new Date().toLocaleString(), user: currentUser?.name || 'System' },
-                    config: configToSave, // SECTION CRITIQUE POUR LE PARTAGE D'ACCES
+                    config: configToSave,
                     history: newHistory || dbHistory,
                     tarifs: newTarifs || tarifs,
                     fiches: newFiches || fiches,
                     users: newUsers || users 
                 };
-                // Utilisation de apiFetch via les wrappers
                 await dbxUploadFile(dbxConfig, setDbxConfig, '/db_tarifs.json', new Blob([JSON.stringify(dataToSave)], { type: 'application/json' }));
             };
 
             const loadCloudDatabase = async (silent = false) => {
-                // On peut charger si on a un token OU si on a de quoi en faire un
                 if (!dbxConfig.token && !(dbxConfig.refreshToken && dbxConfig.appKey)) return;
-                
                 if (!silent) { setSyncStatus('working'); setSyncLog("Chargement Cloud..."); }
-                
                 try {
                     const blob = await dbxDownloadFile(dbxConfig, setDbxConfig, '/db_tarifs.json');
                     const text = await blob.text();
                     const data = JSON.parse(text);
-                    
                     setTarifs(data.tarifs || []);
                     setFiches(data.fiches || []);
                     setDbHistory(data.history || []);
                     if (data.meta) setDbMeta(data.meta);
-                    
-                    // MISE A JOUR DES UTILISATEURS CRITIQUE
                     if (data.users && Array.isArray(data.users)) {
                         setUsers(data.users);
-                        // Sauvegarde locale immédiate pour que le login fonctionne
                         localStorage.setItem('tdbx_users', JSON.stringify(data.users));
                     }
-
-                    // MISE A JOUR AUTOMATIQUE DE LA CONFIGURATION (OAUTH PARTAGÉ)
                     if (data.config && data.config.refreshToken) {
-                        // On update seulement si on n'a pas de config locale ou si elle est différente
-                        // Mais on ne veut pas écraser une config locale valide par une config cloud vide
                         if (data.config.refreshToken && data.config.refreshToken !== dbxConfig.refreshToken) {
                             const newSharedConfig = { ...dbxConfig, ...data.config };
                             setDbxConfig(newSharedConfig);
                             localStorage.setItem('tdbx_config', JSON.stringify(newSharedConfig));
-                            if (!silent) console.log("Configuration OAuth mise à jour depuis le Cloud.");
+                            if (!silent) console.log("Config OAuth mise à jour.");
                         }
                     }
-
                     if (!silent) { setSyncLog("✅ Données à jour."); setSyncStatus('success'); }
                 } catch (e) {
-                    console.error("Sync error", e);
                     if (e.message === "EXPIRED_TOKEN_ALERT") {
                         if (!silent) { 
-                            setSyncLog("⚠️ Token expiré et pas de Refresh Token valide.");
+                            setSyncLog("⚠️ Token expiré.");
                             setSyncStatus('error');
-                            // On force l'ouverture de la config pour permettre une réparation manuelle uniquement si c'est nécessaire
-                            if(users.length <= 2) setShowConfigModal(true); // Si on n'a que les users par défaut, c'est critique
+                            if(users.length <= 2) setShowConfigModal(true);
                         }
                     } else {
                         if (!silent) { setSyncLog("⚠️ Erreur Sync : " + e.message); setSyncStatus('error'); }
@@ -531,25 +476,39 @@
                 }
             };
 
-            // --- LOGIN ---
+            // --- CALCULATOR LOGIC ---
+            const openCalculator = (product, prices) => {
+                let base = 0;
+                let label = '';
+                // Priority: T4 > TTC > HT
+                if (prices.t4) { 
+                    base = parseFloat(prices.t4); 
+                    label = 'Prix T4'; 
+                } else if (prices.ttc) { 
+                    base = parseFloat(prices.ttc); 
+                    label = 'Prix TTC'; 
+                } else { 
+                    base = parseFloat(prices.ht); 
+                    label = 'Prix HT (Exo)'; 
+                }
+                
+                setCalcState({ show: true, product, basePrice: base, baseLabel: label });
+                setExtraDiscount('');
+            };
+
+            // --- LOGIN & ACTIONS ---
             const handleLogin = (e) => {
                 e.preventDefault();
                 const user = users.find(u => u.id === loginForm.username && u.pass === loginForm.password);
-                
                 if (user) {
                     setCurrentUser(user);
                     setLoginError('');
                     setView('dashboard');
-                    
                     const randomQuote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
                     setCurrentQuote(randomQuote);
                     setShowQuoteModal(true);
-
-                    // Demande config si rien du tout (ni token, ni refresh)
                     if (!dbxConfig.token && !dbxConfig.refreshToken && !HARDCODED_DBX_TOKEN) setShowConfigModal(true);
-                } else {
-                    setLoginError('Identifiants incorrects');
-                }
+                } else { setLoginError('Identifiants incorrects'); }
             };
 
             const handleLogout = () => {
@@ -560,79 +519,51 @@
                 setActiveTab('search');
             };
 
-            // --- ACTIONS & VIEWER LOGIC ---
-            
-            // 1. Ouvrir le fichier (Volatile, In-Memory)
             const openFile = async (path, name) => {
                 setIsFileLoading(true);
-                setViewingFile(null); // Reset
-                setPdfState({ pdfDoc: null, pageNum: 1, numPages: 0, scale: 1.0 }); // Reset PDF state
-
+                setViewingFile(null);
+                setPdfState({ pdfDoc: null, pageNum: 1, numPages: 0, scale: 1.0 });
                 try {
-                    // On télécharge le fichier comme un Blob brut
                     const rawBlob = await dbxDownloadFile(dbxConfig, setDbxConfig, path);
                     const safeName = name || "Document";
-                    
-                    // DETECTION PLUS ROBUSTE DU TYPE DE FICHIER
-                    // On vérifie le nom passé ET l'extension du chemin
                     const pathIsPdf = path && path.toLowerCase().endsWith('.pdf');
                     const nameIsPdf = safeName.toLowerCase().endsWith('.pdf');
-                    const isPdf = pathIsPdf || nameIsPdf; // Si l'un des deux indique PDF, c'est un PDF
-                    
-                    // CRUCIAL: Forcer le type MIME pour être sûr que c'est bien reconnu
+                    const isPdf = pathIsPdf || nameIsPdf;
                     const typedBlob = new Blob([rawBlob], { type: isPdf ? 'application/pdf' : rawBlob.type });
                     const url = URL.createObjectURL(typedBlob);
-                    
                     setViewingFile({ url, name: safeName, type: isPdf ? 'pdf' : 'image' });
-                    
-                    // Si PDF, on initialise le rendu PDF.js
                     if (isPdf) {
                         try {
                             const loadingTask = pdfjsLib.getDocument(url);
                             const loadedPdf = await loadingTask.promise;
                             setPdfState(prev => ({ ...prev, pdfDoc: loadedPdf, numPages: loadedPdf.numPages, pageNum: 1 }));
-                        } catch(pdfErr) {
-                            console.error("Erreur init PDF.js", pdfErr);
-                            alert("Erreur lecture PDF interne. Le fichier sera téléchargé.");
-                            // Fallback download ou iframe simple
-                        }
+                        } catch(pdfErr) { alert("Erreur lecture PDF interne."); }
                     }
-
-                } catch(e) { 
-                    alert("Erreur ouverture : " + e.message); 
-                } finally { 
-                    setIsFileLoading(false); 
-                }
+                } catch(e) { alert("Erreur ouverture : " + e.message); } finally { setIsFileLoading(false); }
             };
 
-            // 2. Rendu de la page PDF (Effect)
+            // --- PDF RENDER ---
             useEffect(() => {
                 const renderPage = async () => {
                     if (!viewingFile || viewingFile.type !== 'pdf' || !pdfState.pdfDoc || !canvasRef.current) return;
-                    
                     try {
                         const page = await pdfState.pdfDoc.getPage(pdfState.pageNum);
                         const viewport = page.getViewport({ scale: pdfState.scale });
                         const canvas = canvasRef.current;
                         const context = canvas.getContext('2d');
-                        
                         canvas.height = viewport.height;
                         canvas.width = viewport.width;
-
-                        const renderContext = { canvasContext: context, viewport: viewport };
-                        await page.render(renderContext).promise;
-                    } catch (e) { console.error("Erreur rendu page PDF", e); }
+                        await page.render({ canvasContext: context, viewport }).promise;
+                    } catch (e) { }
                 };
                 renderPage();
             }, [pdfState.pdfDoc, pdfState.pageNum, pdfState.scale, viewingFile]);
 
-            // 3. Contrôles PDF
             const changePage = (offset) => setPdfState(prev => ({ ...prev, pageNum: Math.min(Math.max(1, prev.pageNum + offset), prev.numPages) }));
             const zoomPdf = (delta) => setPdfState(prev => ({ ...prev, scale: Math.max(0.5, prev.scale + delta) }));
-
-            // 4. Fermeture et Nettoyage Mémoire
+            
             const closeViewer = () => {
-                if(viewingFile?.url) URL.revokeObjectURL(viewingFile.url); // Nettoyage mémoire (blob)
+                if(viewingFile?.url) URL.revokeObjectURL(viewingFile.url);
                 setViewingFile(null);
                 setPdfState({ pdfDoc: null, pageNum: 1, numPages: 0, scale: 1.0 });
             };
@@ -647,7 +578,7 @@
                     const newFiche = { id: 'local_' + Date.now(), name: file.name, path: targetPath, type: 'ft', server_modified: new Date().toISOString(), index_date: new Date().toLocaleString() };
                     const newFichesList = [newFiche, ...fiches];
                     setFiches(newFichesList);
-                    saveToCloud(null, newFichesList, null, null).catch(console.error);
+                    saveToCloud(null, newFichesList, null, null);
                     alert(`Fiche ajoutée et publiée !`);
                 } catch (err) { alert("Erreur : " + err.message); } finally { setIsUploading(false); if(uploadInputRef.current) uploadInputRef.current.value = ''; }
             };
@@ -670,19 +601,16 @@
                         canvas.width = viewport.width;
                         await page.render({ canvasContext: ctx, viewport }).promise;
                         const base64Img = canvas.toDataURL('image/png').split(',')[1];
-                        
-                        // MISE A JOUR DU PROMPT POUR L'ASTERISQUE (*) ET LES VIRGULES PRIX
                         let prompt = i === 1 
                             ? `Analyse page ${i}. Cherche date (format JJ/MM/AAAA) sinon "${filenameDate}". IMPORTANT: 1. Si un produit a un astérisque (*) avant ou après son nom, GARDE-LE dans le champ "name" (ex: "Produit *"). 2. Garde EXACTEMENT la ponctuation des prix (virgule ou point pour les décimales), ne les supprime pas. JSON: { "date_tarif": "...", "products": [ {"name": "...", "price": "...", "unit": "..."} ] }` 
                             : `Analyse page ${i}. IMPORTANT: 1. Si un produit a un astérisque (*) avant ou après son nom, GARDE-LE dans le champ "name". 2. Garde EXACTEMENT la ponctuation des prix (virgule ou point pour les décimales), ne les supprime pas. JSON produits uniquement: { "products": [ {"name": "...", "price": "...", "unit": "..."} ] }`;
-                        
                         if (i > 1) await delay(1000);
                         try {
                             const result = await callIA({ contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/png", data: base64Img } } ] }], generationConfig: { responseMimeType: "application/json" } }, dbxConfig.geminiKey);
                             const pageData = JSON.parse(extractJSON(result.candidates[0].content.parts[0].text));
                             if (i === 1 && pageData.date_tarif) extractedDate = pageData.date_tarif;
                             if (pageData.products) allProducts = [...allProducts, ...pageData.products];
-                        } catch (pageErr) { console.warn(`Page ${i} skip:`, pageErr); }
+                        } catch (pageErr) { }
                     }
                     return { date_tarif: extractedDate, products: allProducts };
                 } catch (e) { return { date_tarif: extractDateFromFilename(filename) || "Erreur", products: [] }; }
@@ -691,11 +619,8 @@
             const handleManualTarifUpload = async (e) => {
                 e.preventDefault();
                 const file = adminFileInputRef.current?.files[0];
-                
-                // AMELIORATION DIAGNOSTIC
                 if (!file) return alert("Veuillez sélectionner un fichier PDF.");
-                if (!dbxConfig.geminiKey) return alert("Clé API Gemini manquante. Veuillez la configurer dans l'onglet Admin > Paramètres ou dans le code source.");
-
+                if (!dbxConfig.geminiKey) return alert("Clé API Gemini manquante.");
                 setSyncStatus('working');
                 setSyncLog("Traitement manuel...");
                 setShowAdminUploadModal(false);
@@ -705,19 +630,11 @@
                     const analysis = await analyzePDF(file, file.name);
                     let newTarifs = [...tarifs];
                     if (adminUploadMode === 'update' && targetTarifId) newTarifs = newTarifs.filter(t => t.id !== targetTarifId);
-                    
-                    // SAVE T4 PERCENTAGE IN DOC ENTRY
                     const docEntry = { 
-                        id: uploadMeta.id, 
-                        name: uploadMeta.name, 
-                        path: uploadMeta.path_lower, 
-                        server_modified: uploadMeta.server_modified, 
-                        index_date: new Date().toLocaleString(), 
-                        date_tarif: analysis.date_tarif, 
-                        products: analysis.products,
-                        t4_percentage: parseFloat(t4Value) || 0 // Store T4
+                        id: uploadMeta.id, name: uploadMeta.name, path: uploadMeta.path_lower, 
+                        server_modified: uploadMeta.server_modified, index_date: new Date().toLocaleString(), 
+                        date_tarif: analysis.date_tarif, products: analysis.products, t4_percentage: parseFloat(t4Value) || 0 
                     };
-                    
                     newTarifs.push(docEntry);
                     setTarifs(newTarifs);
                     const newHistoryEntry = { date: new Date().toLocaleString(), user: currentUser.name, action: adminUploadMode === 'new' ? `Ajout: ${file.name} (T4: ${t4Value}%)` : `MAJ: ${file.name}` };
@@ -734,7 +651,6 @@
                 setSyncStatus('working');
                 setSyncLog("Scan global...");
                 let currentTarifs = [...tarifs];
-                let currentFiches = [...fiches];
                 try {
                     const listTarifs = await dbxListFolder(dbxConfig, setDbxConfig);
                     const dbxTarifs = listTarifs.entries.filter(e => e['.tag'] === 'file' && e.name.toLowerCase().endsWith('.pdf'));
@@ -748,77 +664,47 @@
                                 await delay(1000);
                                 const analysis = await analyzePDF(blob, file.name);
                                 currentTarifs = currentTarifs.filter(t => t.id !== file.id);
-                                // For automated sync, maintain existing T4 if available, otherwise default to 0
                                 const existingT4 = existing ? existing.t4_percentage : 0;
-                                
                                 currentTarifs.push({ 
-                                    id: file.id, 
-                                    name: file.name, 
-                                    path: file.path_lower, 
-                                    server_modified: file.server_modified, 
-                                    index_date: new Date().toLocaleString(), 
-                                    date_tarif: analysis.date_tarif, 
-                                    products: analysis.products,
-                                    t4_percentage: existingT4 // Preserve or default
+                                    id: file.id, name: file.name, path: file.path_lower, 
+                                    server_modified: file.server_modified, index_date: new Date().toLocaleString(), 
+                                    date_tarif: analysis.date_tarif, products: analysis.products, t4_percentage: existingT4
                                 });
                             } catch(e) { setSyncLog(`Erreur ${file.name}: ${e.message}`); }
                         }
                     }
                     setTarifs(currentTarifs);
-                    if (dbxConfig.pathFT) {
-                        try {
-                            const listFT = await dbxListFolderFiches(dbxConfig, setDbxConfig);
-                            currentFiches = listFT.entries.filter(e => e['.tag'] === 'file').map(f => ({ id: f.id, name: f.name, path: f.path_lower, type: 'ft', server_modified: f.server_modified, index_date: new Date().toLocaleString() }));
-                            setFiches(currentFiches);
-                        } catch(e) {}
-                    }
                     const newHistoryEntry = { date: new Date().toLocaleString(), user: currentUser.name, action: "Synchronisation Globale" };
                     const updatedHistory = [newHistoryEntry, ...dbHistory].slice(0, 10);
                     setDbHistory(updatedHistory);
-                    await saveToCloud(currentTarifs, currentFiches, updatedHistory, users);
+                    await saveToCloud(currentTarifs, fiches, updatedHistory, users);
                     setSyncLog("Terminé.");
                     setSyncStatus('success');
                 } catch(e) { setSyncLog("Erreur Sync: " + e.message); setSyncStatus('error'); }
             };
 
-            // MODIFICATION: AJOUT SUPPRESSION TOTALE
             const handleDeleteAllTarifs = async () => {
-                if(!confirm("ATTENTION : Cela va supprimer TOUS les tarifs de l'index (la base de données). Les fichiers PDF sur Dropbox ne seront PAS effacés. Continuer ?")) return;
+                if(!confirm("ATTENTION : Cela va supprimer TOUS les tarifs. Continuer ?")) return;
                 setSyncStatus('working');
                 try {
                     const newHistoryEntry = { date: new Date().toLocaleString(), user: currentUser.name, action: "Suppression Totale des Tarifs" };
                     const updatedHistory = [newHistoryEntry, ...dbHistory].slice(0, 10);
                     setDbHistory(updatedHistory);
-                    
-                    setTarifs([]); // Clear local
-                    
-                    await saveToCloud([], fiches, updatedHistory, users); // Save empty array
-                    setSyncLog("✅ Tous les tarifs ont été supprimés de l'index.");
+                    setTarifs([]);
+                    await saveToCloud([], fiches, updatedHistory, users);
+                    setSyncLog("✅ Tous les tarifs supprimés.");
                     setSyncStatus('success');
-                } catch(e) {
-                    setSyncLog("❌ Erreur suppression totale : " + e.message);
-                    setSyncStatus('error');
-                    alert("Erreur : " + e.message);
-                    // Reload to restore state if failed
-                    loadCloudDatabase(true);
-                }
+                } catch(e) { setSyncLog("❌ Erreur suppression : " + e.message); setSyncStatus('error'); loadCloudDatabase(true); }
             };
 
-            // MODIFICATION: AMELIORATION SUPPRESSION UNITAIRE (ROLLBACK EN CAS D'ERREUR)
             const handleDeleteEntry = async (type, id, name) => {
                 if(!confirm(`Supprimer "${name}" ?`)) return;
                 setSyncStatus('working');
-                
-                // Optimistic UI Update (On sauvegarde l'état avant modif)
                 const prevTarifs = [...tarifs];
                 const prevFiches = [...fiches];
-                
                 let newTarifs = type === 'tarif' ? tarifs.filter(t => t.id !== id) : tarifs;
                 let newFiches = type === 'fiche' ? fiches.filter(f => f.id !== id) : fiches;
-                
-                setTarifs(newTarifs); 
-                setFiches(newFiches);
-                
+                setTarifs(newTarifs); setFiches(newFiches);
                 try {
                     const newHistoryEntry = { date: new Date().toLocaleString(), user: currentUser.name, action: `Suppression : ${name}` };
                     const updatedHistory = [newHistoryEntry, ...dbHistory].slice(0, 10);
@@ -826,14 +712,7 @@
                     await saveToCloud(newTarifs, newFiches, updatedHistory, users);
                     setSyncLog(`✅ "${name}" supprimé.`);
                     setSyncStatus('success');
-                } catch(e) { 
-                    setSyncLog("Err delete: " + e.message); 
-                    setSyncStatus('error'); 
-                    alert("Echec de la suppression sur le Cloud : " + e.message + "\nL'élément a été restauré.");
-                    // Rollback (Annulation si échec)
-                    setTarifs(prevTarifs);
-                    setFiches(prevFiches);
-                }
+                } catch(e) { setSyncLog("Err delete: " + e.message); setSyncStatus('error'); alert("Echec suppression."); setTarifs(prevTarifs); setFiches(prevFiches); }
             };
 
             const handleUserSubmit = async (e) => {
@@ -850,22 +729,14 @@
                 }
                 setUsers(updatedUsers);
                 setUserFormData({ name: '', login: '', pass: '', role: 'viewer' });
-                try { await saveToCloud(null, null, null, updatedUsers); alert("Enregistré et synchronisé !"); } catch(err) { alert("Erreur sync cloud : " + err.message); }
+                try { await saveToCloud(null, null, null, updatedUsers); alert("Enregistré !"); } catch(err) { alert("Erreur sync : " + err.message); }
             };
 
             const handleManualCloudSave = async () => {
                 setSyncStatus('working');
                 setSyncLog("Sauvegarde Cloud...");
-                try {
-                    await saveToCloud();
-                    setSyncLog("✅ Sauvegardé.");
-                    setSyncStatus('success');
-                    alert("Base publiée sur le Cloud !");
-                } catch (e) {
-                    setSyncLog("❌ Erreur : " + e.message);
-                    setSyncStatus('error');
-                    alert("Erreur : " + e.message);
-                }
+                try { await saveToCloud(); setSyncLog("✅ Sauvegardé."); setSyncStatus('success'); alert("Publié !"); } 
+                catch (e) { setSyncLog("❌ Erreur : " + e.message); setSyncStatus('error'); alert("Erreur : " + e.message); }
             };
             
             const handleLocalExport = () => {
@@ -877,7 +748,6 @@
                 document.body.appendChild(a); a.click(); document.body.removeChild(a);
             };
 
-            // --- SEARCH LOGIC ---
             const searchResults = useMemo(() => {
                 if (!searchQuery || searchQuery.length < 2) return { products: [], fiches: [] };
                 const q = searchQuery.toLowerCase();
@@ -885,12 +755,7 @@
                 (tarifs || []).forEach(t => {
                     if (t.products) t.products.forEach(p => {
                         if (p.name?.toLowerCase().includes(q)) foundProducts.push({ 
-                            ...p, 
-                            source: t.name, 
-                            date_tarif: t.date_tarif, 
-                            path: t.path, 
-                            type: 'prod',
-                            t4_percentage: t.t4_percentage || 0 // Pass T4 to product
+                            ...p, source: t.name, date_tarif: t.date_tarif, path: t.path, type: 'prod', t4_percentage: t.t4_percentage || 0 
                         });
                     });
                 });
@@ -898,56 +763,34 @@
                 return { products: foundProducts, fiches: foundFiches };
             }, [searchQuery, tarifs, fiches]);
 
-            // --- VIEW LOGIN ---
             if (view === 'login') return (
                 <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
                     {showConfigModal && (
                         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full animate-fade">
                                 <h2 className="text-xl font-bold mb-2">Configuration Initiale</h2>
-                                <p className="text-slate-500 text-sm mb-6">Token manquant ou expiré. Si vous êtes admin, configurez-le.</p>
+                                <p className="text-slate-500 text-sm mb-6">Token manquant ou expiré.</p>
                                 <input type="password" placeholder="Token Dropbox..." className="w-full p-3 border rounded-xl mb-4 text-sm font-mono outline-none focus:ring-2 focus:ring-blue-500" value={dbxConfig.token} onChange={e => setDbxConfig({...dbxConfig, token: e.target.value})} />
                                 <button onClick={() => { if(dbxConfig.token) { setShowConfigModal(false); loadCloudDatabase(); } }} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Valider</button>
                             </div>
                         </div>
                     )}
-
                     <div className="w-full max-w-md p-8 bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 animate-fade relative">
-                        {/* Indicateur de chargement discret */}
-                        {syncStatus === 'working' && (
-                            <div className="absolute top-4 right-4 flex items-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full animate-pulse">
-                                <Icon name="Loader2" size={14} className="animate-spin"/> Sync...
-                            </div>
-                        )}
-
+                        {syncStatus === 'working' && <div className="absolute top-4 right-4 flex items-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full animate-pulse"><Icon name="Loader2" size={14} className="animate-spin"/> Sync...</div>}
                         <div className="text-center mb-8">
                             <div className="inline-flex p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-200 mb-4"><Icon name="Database" size={32} className="text-white"/></div>
                             <h1 className="text-3xl font-black text-slate-800 mb-1">Tarifiers<span className="text-blue-600">DBX</span></h1>
                             <p className="text-slate-500 font-medium text-sm">Portail Unifié CMGP-CAS</p>
                         </div>
                         <form onSubmit={handleLogin} className="space-y-4">
-                            {syncStatus === 'error' && (
-                                <div className="bg-red-50 text-red-500 p-3 rounded-xl text-xs text-center font-bold border border-red-100 flex flex-col items-center gap-1">
-                                    <span>⚠️ {syncLog}</span>
-                                    <button type="button" onClick={() => setShowConfigModal(true)} className="underline text-red-700 hover:text-red-900 mt-1">Configurer le token</button>
-                                </div>
-                            )}
+                            {syncStatus === 'error' && <div className="bg-red-50 text-red-500 p-3 rounded-xl text-xs text-center font-bold border border-red-100 flex flex-col items-center gap-1"><span>⚠️ {syncLog}</span><button type="button" onClick={() => setShowConfigModal(true)} className="underline text-red-700 hover:text-red-900 mt-1">Configurer le token</button></div>}
                             {loginError && <div className="bg-red-50 text-red-500 p-3 rounded-xl text-sm text-center font-bold border border-red-100">{loginError}</div>}
                             <input className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-700" value={loginForm.username} onChange={e => setLoginForm({...loginForm, username: e.target.value})} placeholder="Identifiant" />
                             <input type="password" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-700" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="Mot de passe" />
-                            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 transition-all transform active:scale-95 mt-2">
-                                Se Connecter
-                            </button>
+                            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 transition-all transform active:scale-95 mt-2">Se Connecter</button>
                         </form>
-                        
-                        {/* Bouton de secours pour forcer la mise à jour des accès */}
-                        <div className="mt-6 pt-4 border-t border-slate-200 text-center">
-                            <button type="button" onClick={() => loadCloudDatabase(false)} className="text-xs font-bold text-slate-400 hover:text-blue-600 flex items-center justify-center gap-2 w-full transition-colors">
-                                <Icon name="RefreshCw" size={12}/> Mettre à jour les accès (Cloud)
-                            </button>
-                        </div>
-
-                        {!HARDCODED_DBX_TOKEN && <p className="text-xs text-center text-red-400 mt-4">⚠️ Token Dropbox manquant dans le code.</p>}
+                        <div className="mt-6 pt-4 border-t border-slate-200 text-center"><button type="button" onClick={() => loadCloudDatabase(false)} className="text-xs font-bold text-slate-400 hover:text-blue-600 flex items-center justify-center gap-2 w-full transition-colors"><Icon name="RefreshCw" size={12}/> Mettre à jour les accès (Cloud)</button></div>
+                        {!HARDCODED_DBX_TOKEN && <p className="text-xs text-center text-red-400 mt-4">⚠️ Token Dropbox manquant.</p>}
                     </div>
                 </div>
             );
@@ -955,243 +798,110 @@
             return (
                 <ErrorBoundary>
                     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans relative">
+                        {isFileLoading && <div className="fixed inset-0 z-[110] bg-white/50 backdrop-blur-sm flex items-center justify-center animate-fade"><div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center border border-slate-100"><div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div><div className="font-bold text-slate-800">Chargement...</div></div></div>}
                         
-                        {/* LOADER GLOBAL POUR FICHIER */}
-                        {isFileLoading && (
-                            <div className="fixed inset-0 z-[110] bg-white/50 backdrop-blur-sm flex items-center justify-center animate-fade">
-                                <div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center border border-slate-100">
-                                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-                                    <div className="font-bold text-slate-800">Chargement du document...</div>
-                                    <div className="text-xs text-slate-400 mt-2">Récupération sécurisée RAM</div>
+                        {/* CALCULATRICE MODAL */}
+                        {calcState.show && (
+                            <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade">
+                                <div className="bg-white p-6 rounded-3xl shadow-2xl max-w-sm w-full relative">
+                                    <button onClick={() => setCalcState({ ...calcState, show: false })} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><Icon name="X"/></button>
+                                    <h3 className="font-bold text-lg mb-1 flex items-center gap-2"><Icon name="Calculator" className="text-blue-600"/> Calculatrice</h3>
+                                    <p className="text-xs text-slate-500 mb-6 truncate">{calcState.product.name}</p>
+                                    
+                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-4">
+                                        <div className="flex justify-between text-sm mb-1">
+                                            <span className="text-slate-500">Base ({calcState.baseLabel})</span>
+                                            <span className="font-bold text-slate-700">{calcState.basePrice.toFixed(2)} DH</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-3">
+                                            <div className="grow">
+                                                <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Remise Suppl. (%)</label>
+                                                <input type="number" min="0" max="100" autoFocus className="w-full p-2 border rounded-lg text-lg font-bold text-center outline-none focus:ring-2 focus:ring-blue-500" placeholder="0" value={extraDiscount} onChange={e => setExtraDiscount(e.target.value)} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-center">
+                                        <div className="text-xs text-slate-400 font-bold uppercase mb-1">Prix Final</div>
+                                        <div className="text-4xl font-black text-blue-600 tracking-tight">
+                                            {(calcState.basePrice * (1 - (parseFloat(extraDiscount)||0)/100)).toFixed(2)} <span className="text-sm">DH</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* VIEWER MODAL (MOTEUR RENDU INTEGRE) */}
                         {viewingFile && (
                             <div className="fixed inset-0 z-[100] bg-slate-900 flex flex-col animate-fade">
                                 <div className="flex items-center justify-between p-4 bg-slate-900 text-white border-b border-slate-700 shadow-xl z-20">
                                     <h3 className="font-bold truncate max-w-md flex items-center gap-2 text-sm md:text-base"><Icon name="FileText" size={18} className="text-blue-400"/> {viewingFile.name}</h3>
                                     <div className="flex gap-2 items-center">
-                                        {viewingFile.type === 'pdf' && pdfState.numPages > 1 && (
-                                            <div className="hidden md:flex bg-slate-800 rounded-lg p-1 mr-2 items-center">
-                                                <button onClick={() => changePage(-1)} className="p-1 hover:text-blue-400"><Icon name="ChevronLeft"/></button>
-                                                <span className="px-2 text-xs font-mono">{pdfState.pageNum} / {pdfState.numPages}</span>
-                                                <button onClick={() => changePage(1)} className="p-1 hover:text-blue-400"><Icon name="ChevronRight"/></button>
-                                            </div>
-                                        )}
-                                        {viewingFile.type === 'pdf' && (
-                                            <div className="hidden md:flex bg-slate-800 rounded-lg p-1 mr-2">
-                                                <button onClick={() => zoomPdf(-0.2)} className="p-1 hover:text-blue-400"><Icon name="Minus" size={16}/></button>
-                                                <button onClick={() => zoomPdf(0.2)} className="p-1 hover:text-blue-400"><Icon name="Plus" size={16}/></button>
-                                            </div>
-                                        )}
-                                        <a href={viewingFile.url} download={viewingFile.name} className="p-2 bg-slate-800 hover:bg-blue-600 rounded-lg text-slate-300 hover:text-white transition-colors" title="Sauvegarder (Optionnel)">
-                                            <Icon name="Download" size={18}/>
-                                        </a>
-                                        <button onClick={closeViewer} className="p-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition-colors" title="Fermer & Purger Mémoire">
-                                            <Icon name="X" size={18}/>
-                                        </button>
+                                        {viewingFile.type === 'pdf' && pdfState.numPages > 1 && (<div className="hidden md:flex bg-slate-800 rounded-lg p-1 mr-2 items-center"><button onClick={() => changePage(-1)} className="p-1 hover:text-blue-400"><Icon name="ChevronLeft"/></button><span className="px-2 text-xs font-mono">{pdfState.pageNum} / {pdfState.numPages}</span><button onClick={() => changePage(1)} className="p-1 hover:text-blue-400"><Icon name="ChevronRight"/></button></div>)}
+                                        {viewingFile.type === 'pdf' && (<div className="hidden md:flex bg-slate-800 rounded-lg p-1 mr-2"><button onClick={() => zoomPdf(-0.2)} className="p-1 hover:text-blue-400"><Icon name="Minus" size={16}/></button><button onClick={() => zoomPdf(0.2)} className="p-1 hover:text-blue-400"><Icon name="Plus" size={16}/></button></div>)}
+                                        <a href={viewingFile.url} download={viewingFile.name} className="p-2 bg-slate-800 hover:bg-blue-600 rounded-lg text-slate-300 hover:text-white transition-colors" title="Sauvegarder"><Icon name="Download" size={18}/></a>
+                                        <button onClick={closeViewer} className="p-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition-colors" title="Fermer"><Icon name="X" size={18}/></button>
                                     </div>
                                 </div>
                                 <div className="flex-1 relative bg-gray-800 overflow-auto flex justify-center p-4">
-                                    {viewingFile.type === 'pdf' ? (
-                                        <div className="relative shadow-2xl">
-                                            <canvas ref={canvasRef} className="max-w-full h-auto bg-white"/>
-                                            {/* Contrôles flottants mobile */}
-                                            {pdfState.numPages > 1 && (
-                                                <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white px-4 py-2 rounded-full flex gap-4 items-center shadow-xl backdrop-blur-sm border border-slate-700">
-                                                     <button onClick={() => changePage(-1)}><Icon name="ChevronLeft"/></button>
-                                                     <span className="text-xs font-bold">{pdfState.pageNum}/{pdfState.numPages}</span>
-                                                     <button onClick={() => changePage(1)}><Icon name="ChevronRight"/></button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <img src={viewingFile.url} alt="Visuel" className="max-w-full max-h-full object-contain" />
-                                    )}
+                                    {viewingFile.type === 'pdf' ? (<div className="relative shadow-2xl"><canvas ref={canvasRef} className="max-w-full h-auto bg-white"/>{pdfState.numPages > 1 && (<div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white px-4 py-2 rounded-full flex gap-4 items-center shadow-xl backdrop-blur-sm border border-slate-700"><button onClick={() => changePage(-1)}><Icon name="ChevronLeft"/></button><span className="text-xs font-bold">{pdfState.pageNum}/{pdfState.numPages}</span><button onClick={() => changePage(1)}><Icon name="ChevronRight"/></button></div>)}</div>) : (<img src={viewingFile.url} alt="Visuel" className="max-w-full max-h-full object-contain" />)}
                                 </div>
                             </div>
                         )}
 
-                        {/* CITATION MODAL */}
-                        {showQuoteModal && currentQuote && (
-                            <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-6 animate-fade">
-                                <div className="max-w-2xl w-full text-center text-white">
-                                    <div className="mb-8"><Icon name="Quote" size={64} className="mx-auto text-blue-400 opacity-50"/></div>
-                                    <h2 className="text-3xl md:text-5xl font-black mb-8 leading-tight">"{currentQuote.text}"</h2>
-                                    <p className="text-xl text-blue-200 font-medium mb-12">— {currentQuote.author}</p>
-                                    <button onClick={() => setShowQuoteModal(false)} className="bg-white text-slate-900 px-8 py-4 rounded-full font-bold text-lg hover:bg-blue-50 transition-transform hover:scale-105 shadow-xl">Accéder au Portail <Icon name="ArrowRight" className="inline ml-2"/></button>
-                                </div>
-                            </div>
-                        )}
+                        {showQuoteModal && currentQuote && <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-6 animate-fade"><div className="max-w-2xl w-full text-center text-white"><div className="mb-8"><Icon name="Quote" size={64} className="mx-auto text-blue-400 opacity-50"/></div><h2 className="text-3xl md:text-5xl font-black mb-8 leading-tight">"{currentQuote.text}"</h2><p className="text-xl text-blue-200 font-medium mb-12">— {currentQuote.author}</p><button onClick={() => setShowQuoteModal(false)} className="bg-white text-slate-900 px-8 py-4 rounded-full font-bold text-lg hover:bg-blue-50 transition-transform hover:scale-105 shadow-xl">Accéder au Portail <Icon name="ArrowRight" className="inline ml-2"/></button></div></div>}
 
                         <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 h-16 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40">
+                            <div className="flex items-center gap-3"><div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('search')}><div className="bg-blue-600 text-white p-1.5 rounded-lg"><Icon name="Database" size={20} /></div><span className="font-bold text-lg tracking-tight hidden md:inline">Tarifiers<span className="text-blue-600">DBX</span></span></div><button onClick={() => loadCloudDatabase()} className="p-2 bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 rounded-full transition-colors" title="Forcer la mise à jour"><Icon name="RefreshCw" size={16} className={syncStatus === 'working' ? 'animate-spin' : ''}/></button></div>
                             <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('search')}>
-                                    <div className="bg-blue-600 text-white p-1.5 rounded-lg"><Icon name="Database" size={20} /></div>
-                                    <span className="font-bold text-lg tracking-tight hidden md:inline">Tarifiers<span className="text-blue-600">DBX</span></span>
-                                </div>
-                                {/* MANUAL REFRESH BUTTON */}
-                                <button onClick={() => loadCloudDatabase()} className="p-2 bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 rounded-full transition-colors" title="Forcer la mise à jour">
-                                    <Icon name="RefreshCw" size={16} className={syncStatus === 'working' ? 'animate-spin' : ''}/>
-                                </button>
-                            </div>
-                            
-                            <div className="flex items-center gap-3">
-                                {currentUser.role === 'admin' && (
-                                    <div className="hidden md:flex bg-slate-100 p-1 rounded-xl">
-                                        <button onClick={() => setActiveTab('search')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'search' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Recherche</button>
-                                        <button onClick={() => setActiveTab('admin')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'admin' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Admin</button>
-                                        <button onClick={() => setActiveTab('users')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'users' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Users</button>
-                                    </div>
-                                )}
-                                <div className="h-8 w-px bg-slate-200 mx-1"></div>
-                                <button onClick={handleLogout} className="flex items-center gap-2 text-slate-500 hover:text-red-600 transition-colors text-sm font-medium"><span className="hidden md:inline">{currentUser.name}</span><Icon name="LogOut" size={18} /></button>
+                                {currentUser.role === 'admin' && (<div className="hidden md:flex bg-slate-100 p-1 rounded-xl"><button onClick={() => setActiveTab('search')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'search' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Recherche</button><button onClick={() => setActiveTab('admin')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'admin' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Admin</button><button onClick={() => setActiveTab('users')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'users' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Users</button></div>)}
+                                <div className="h-8 w-px bg-slate-200 mx-1"></div><button onClick={handleLogout} className="flex items-center gap-2 text-slate-500 hover:text-red-600 transition-colors text-sm font-medium"><span className="hidden md:inline">{currentUser.name}</span><Icon name="LogOut" size={18} /></button>
                             </div>
                         </nav>
 
                         <main className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-8">
                             {activeTab === 'search' && (
                                 <div className="animate-fade">
-                                    {/* BANNER INFO MAJ */}
-                                    {dbMeta && (
-                                        <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2 mb-6 flex justify-between items-center text-xs text-blue-800 animate-fade">
-                                            <div className="flex gap-4">
-                                                <span className="font-bold flex items-center gap-1"><Icon name="Clock" size={12}/> MAJ: {dbMeta.date}</span>
-                                                <span className="hidden md:inline">|</span>
-                                                <span className="flex items-center gap-1"><Icon name="User" size={12}/> {dbMeta.user}</span>
-                                            </div>
-                                            <div className="italic opacity-75 hidden md:block">Données synchronisées automatiquement</div>
-                                        </div>
-                                    )}
-
-                                    {/* BANDEAU DEFILANT HISTORIQUE */}
-                                    {dbHistory.length > 0 && (
-                                        <div className="bg-slate-900 text-white py-2 px-4 rounded-lg mb-6 shadow-md border border-slate-700 overflow-hidden relative">
-                                            <div className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-slate-900 to-transparent w-10 z-10"></div>
-                                            <div className="absolute right-0 top-0 bottom-0 bg-gradient-to-l from-slate-900 to-transparent w-10 z-10"></div>
-                                            <div className="marquee-container">
-                                                <div className="marquee-content flex gap-8">
-                                                    {dbHistory.map((h, i) => (
-                                                        <span key={i} className="inline-flex items-center gap-2 text-xs font-mono">
-                                                            <span className="text-blue-400">[{h.date}]</span>
-                                                            <span className="font-bold text-yellow-400">{h.user}</span>:
-                                                            <span>{h.action}</span>
-                                                            <span className="text-slate-600 mx-2">|</span>
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* GRAPHIQUE STATISTIQUES */}
+                                    {dbMeta && <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2 mb-6 flex justify-between items-center text-xs text-blue-800 animate-fade"><div className="flex gap-4"><span className="font-bold flex items-center gap-1"><Icon name="Clock" size={12}/> MAJ: {dbMeta.date}</span><span className="hidden md:inline">|</span><span className="flex items-center gap-1"><Icon name="User" size={12}/> {dbMeta.user}</span></div><div className="italic opacity-75 hidden md:block">Données synchronisées automatiquement</div></div>}
+                                    {dbHistory.length > 0 && <div className="bg-slate-900 text-white py-2 px-4 rounded-lg mb-6 shadow-md border border-slate-700 overflow-hidden relative"><div className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-slate-900 to-transparent w-10 z-10"></div><div className="absolute right-0 top-0 bottom-0 bg-gradient-to-l from-slate-900 to-transparent w-10 z-10"></div><div className="marquee-container"><div className="marquee-content flex gap-8">{dbHistory.map((h, i) => (<span key={i} className="inline-flex items-center gap-2 text-xs font-mono"><span className="text-blue-400">[{h.date}]</span><span className="font-bold text-yellow-400">{h.user}</span>:<span>{h.action}</span><span className="text-slate-600 mx-2">|</span></span>))}</div></div></div>}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                                            <h3 className="text-xs font-bold uppercase text-slate-400 mb-4 flex items-center gap-2"><Icon name="BarChart2" size={14}/> Top Recherches (Local)</h3>
-                                            <div className="space-y-3">
-                                                {users.sort((a,b) => b.searchCount - a.searchCount).slice(0, 3).map((u, i) => (
-                                                    <div key={i} className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-600">{u.name.charAt(0)}</div>
-                                                        <div className="flex-1">
-                                                            <div className="flex justify-between text-xs mb-1">
-                                                                <span className="font-bold text-slate-700">{u.name}</span>
-                                                                <span className="text-slate-400">{u.searchCount} rech.</span>
-                                                            </div>
-                                                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                                                                <div className="h-full bg-blue-500 rounded-full bar-fill" style={{width: `${Math.min((u.searchCount / (Math.max(...users.map(u=>u.searchCount)) || 1)) * 100, 100)}%`}}></div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                                            <h3 className="text-xs font-bold uppercase text-slate-400 mb-4 flex items-center gap-2"><Icon name="PieChart" size={14}/> Base de Données</h3>
-                                            <div className="flex gap-4 items-center h-full pb-4">
-                                                <div className="flex-1 text-center p-4 bg-green-50 rounded-xl">
-                                                    <div className="text-2xl font-black text-green-600">{tarifs.length}</div>
-                                                    <div className="text-xs font-bold text-green-800 uppercase">Tarifs</div>
-                                                </div>
-                                                <div className="flex-1 text-center p-4 bg-indigo-50 rounded-xl">
-                                                    <div className="text-2xl font-black text-indigo-600">{fiches.length}</div>
-                                                    <div className="text-xs font-bold text-indigo-800 uppercase">Fiches</div>
-                                                </div>
-                                                <div className="flex-1 text-center p-4 bg-blue-50 rounded-xl">
-                                                    <div className="text-2xl font-black text-blue-600">{tarifs.reduce((acc,t)=>acc+(t.products?.length||0),0)}</div>
-                                                    <div className="text-xs font-bold text-blue-800 uppercase">Produits</div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"><h3 className="text-xs font-bold uppercase text-slate-400 mb-4 flex items-center gap-2"><Icon name="BarChart2" size={14}/> Top Recherches (Local)</h3><div className="space-y-3">{users.sort((a,b) => b.searchCount - a.searchCount).slice(0, 3).map((u, i) => (<div key={i} className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-600">{u.name.charAt(0)}</div><div className="flex-1"><div className="flex justify-between text-xs mb-1"><span className="font-bold text-slate-700">{u.name}</span><span className="text-slate-400">{u.searchCount} rech.</span></div><div className="h-2 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-blue-500 rounded-full bar-fill" style={{width: `${Math.min((u.searchCount / (Math.max(...users.map(u=>u.searchCount)) || 1)) * 100, 100)}%`}}></div></div></div></div>))}</div></div>
+                                        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"><h3 className="text-xs font-bold uppercase text-slate-400 mb-4 flex items-center gap-2"><Icon name="PieChart" size={14}/> Base de Données</h3><div className="flex gap-4 items-center h-full pb-4"><div className="flex-1 text-center p-4 bg-green-50 rounded-xl"><div className="text-2xl font-black text-green-600">{tarifs.length}</div><div className="text-xs font-bold text-green-800 uppercase">Tarifs</div></div><div className="flex-1 text-center p-4 bg-indigo-50 rounded-xl"><div className="text-2xl font-black text-indigo-600">{fiches.length}</div><div className="text-xs font-bold text-indigo-800 uppercase">Fiches</div></div><div className="flex-1 text-center p-4 bg-blue-50 rounded-xl"><div className="text-2xl font-black text-blue-600">{tarifs.reduce((acc,t)=>acc+(t.products?.length||0),0)}</div><div className="text-xs font-bold text-blue-800 uppercase">Produits</div></div></div></div>
                                     </div>
-
-                                    <div className="max-w-3xl mx-auto text-center mb-10">
-                                        <div className="relative group z-10">
-                                            <input className="w-full p-5 pl-14 rounded-2xl border border-slate-200 shadow-xl shadow-slate-100 focus:ring-4 focus:ring-blue-50 outline-none text-lg font-medium transition-all" placeholder="Rechercher un produit ou une fiche..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} autoFocus />
-                                            <div className="absolute left-5 top-5 text-slate-300 group-focus-within:text-blue-500 transition-colors"><Icon name="Search" size={24} /></div>
-                                        </div>
-                                        <div className="mt-4 flex justify-center">
-                                            <button onClick={() => uploadInputRef.current.click()} disabled={isUploading} className="text-xs font-bold text-slate-400 hover:text-blue-600 flex items-center gap-2 transition-colors bg-slate-50 hover:bg-blue-50 px-3 py-1.5 rounded-full">
-                                                <Icon name={isUploading ? "Loader2" : "UploadCloud"} size={14} className={isUploading ? "animate-spin" : ""}/>{isUploading ? "Envoi..." : "Ajouter Fiche PDF"}
-                                            </button>
-                                            <input type="file" ref={uploadInputRef} onChange={handleUploadFiche} accept="application/pdf" className="hidden" />
-                                        </div>
-                                    </div>
-
-                                    {/* RESULTATS */}
+                                    <div className="max-w-3xl mx-auto text-center mb-10"><div className="relative group z-10"><input className="w-full p-5 pl-14 rounded-2xl border border-slate-200 shadow-xl shadow-slate-100 focus:ring-4 focus:ring-blue-50 outline-none text-lg font-medium transition-all" placeholder="Rechercher un produit ou une fiche..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} autoFocus /><div className="absolute left-5 top-5 text-slate-300 group-focus-within:text-blue-500 transition-colors"><Icon name="Search" size={24} /></div></div><div className="mt-4 flex justify-center"><button onClick={() => uploadInputRef.current.click()} disabled={isUploading} className="text-xs font-bold text-slate-400 hover:text-blue-600 flex items-center gap-2 transition-colors bg-slate-50 hover:bg-blue-50 px-3 py-1.5 rounded-full"><Icon name={isUploading ? "Loader2" : "UploadCloud"} size={14} className={isUploading ? "animate-spin" : ""}/>{isUploading ? "Envoi..." : "Ajouter Fiche PDF"}</button><input type="file" ref={uploadInputRef} onChange={handleUploadFiche} accept="application/pdf" className="hidden" /></div></div>
                                     <div className="space-y-8 pb-20">
                                         {searchResults.products.length > 0 && (
                                             <div className="animate-fade">
                                                 <h3 className="text-sm font-bold uppercase text-slate-400 mb-4 pl-2 flex items-center gap-2"><Icon name="Box" size={16}/> Tarifs ({searchResults.products.length})</h3>
                                                 <div className="space-y-3">
                                                     {searchResults.products.map((res, i) => {
-                                                        // LOGIQUE TVA CORRIGÉE (Asterisk avant OU après)
                                                         const isTaxable = res.name && (res.name.trim().startsWith('*') || res.name.trim().endsWith('*'));
-                                                        // Nettoyage prix : remplace virgule par point pour le float, supprime tout sauf chiffres et point
                                                         const priceVal = parseFloat(String(res.price).replace(/,/g, '.').replace(/[^0-9.]/g, ''));
                                                         const validPrice = !isNaN(priceVal);
                                                         const priceHT = validPrice ? priceVal.toFixed(2) : res.price;
                                                         const priceTTC = validPrice ? (priceVal * 1.20).toFixed(2) : null;
-                                                        
-                                                        // LOGIQUE T4 (Remise)
-                                                        // T4 s'applique sur TTC si taxable, ou sur HT si Exo
                                                         const t4Rate = res.t4_percentage || 0;
                                                         const basePriceForT4 = isTaxable ? (validPrice ? priceVal * 1.20 : 0) : priceVal;
                                                         const priceT4 = validPrice ? (basePriceForT4 * (1 - t4Rate/100)).toFixed(2) : null;
+                                                        
+                                                        // Prices Object passed to calculator
+                                                        const pricesObj = {
+                                                            ht: validPrice ? priceHT : null,
+                                                            ttc: isTaxable ? priceTTC : null,
+                                                            t4: (t4Rate > 0 && validPrice) ? priceT4 : null
+                                                        };
 
                                                         return (
                                                             <div key={i} className="bg-white p-5 rounded-2xl border border-slate-100 hover:border-blue-300 hover:shadow-lg transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group">
-                                                                <div className="flex items-start gap-4">
-                                                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-blue-50 text-blue-600"><Icon name="Tag" size={20}/></div>
-                                                                    <div>
-                                                                        <div className="font-bold text-slate-800 text-lg">{res.name}</div>
-                                                                        <div className="flex flex-wrap items-center gap-2 mt-2">
-                                                                            <span className="bg-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 flex items-center gap-1"><Icon name="Folder" size={12}/> {res.source}</span>
-                                                                            <span className="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 bg-green-50 text-green-600 border border-green-100"><Icon name="Calendar" size={12}/> {res.date_tarif}</span>
-                                                                            {t4Rate > 0 && <span className="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 bg-orange-50 text-orange-600 border border-orange-100"><Icon name="Percent" size={12}/> T4: -{t4Rate}%</span>}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
+                                                                <div className="flex items-start gap-4"><div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-blue-50 text-blue-600"><Icon name="Tag" size={20}/></div><div><div className="font-bold text-slate-800 text-lg">{res.name}</div><div className="flex flex-wrap items-center gap-2 mt-2"><span className="bg-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 flex items-center gap-1"><Icon name="Folder" size={12}/> {res.source}</span><span className="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 bg-green-50 text-green-600 border border-green-100"><Icon name="Calendar" size={12}/> {res.date_tarif}</span>{t4Rate > 0 && <span className="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 bg-orange-50 text-orange-600 border border-orange-100"><Icon name="Percent" size={12}/> T4: -{t4Rate}%</span>}</div></div></div>
                                                                 <div className="flex items-center justify-between md:justify-end gap-3 pl-14 md:pl-0">
                                                                     <div className="text-right mr-4">
-                                                                        {validPrice && isTaxable ? (
-                                                                            <div className="flex flex-col items-end">
-                                                                                <div className="text-sm font-bold text-slate-400">{priceHT} <span className="text-[10px]">HT</span></div>
-                                                                                <div className="text-xl font-bold text-slate-700 whitespace-nowrap">{priceTTC} <span className="text-xs text-slate-400 font-bold">TTC</span></div>
-                                                                                {t4Rate > 0 && <div className="text-2xl font-black text-orange-500 whitespace-nowrap">{priceT4} <span className="text-xs text-orange-300 font-bold">T4</span></div>}
-                                                                            </div>
-                                                                        ) : (
-                                                                            <div className="flex flex-col items-end">
-                                                                                <div className="text-xl font-bold text-green-600 whitespace-nowrap">
-                                                                                    {priceHT} <span className="text-xs text-green-800 font-bold">{validPrice ? 'EXO' : (res.unit || 'DH')}</span>
-                                                                                </div>
-                                                                                {t4Rate > 0 && validPrice && <div className="text-2xl font-black text-orange-500 whitespace-nowrap">{priceT4} <span className="text-xs text-orange-300 font-bold">T4</span></div>}
-                                                                            </div>
-                                                                        )}
+                                                                        {validPrice && isTaxable ? (<div className="flex flex-col items-end"><div className="text-sm font-bold text-slate-400">{priceHT} <span className="text-[10px]">HT</span></div><div className="text-xl font-bold text-slate-700 whitespace-nowrap">{priceTTC} <span className="text-xs text-slate-400 font-bold">TTC</span></div>{t4Rate > 0 && <div className="text-2xl font-black text-orange-500 whitespace-nowrap">{priceT4} <span className="text-xs text-orange-300 font-bold">T4</span></div>}</div>) : (<div className="flex flex-col items-end"><div className="text-xl font-bold text-green-600 whitespace-nowrap">{priceHT} <span className="text-xs text-green-800 font-bold">{validPrice ? 'EXO' : (res.unit || 'DH')}</span></div>{t4Rate > 0 && validPrice && <div className="text-2xl font-black text-orange-500 whitespace-nowrap">{priceT4} <span className="text-xs text-orange-300 font-bold">T4</span></div>}</div>)}
                                                                         {validPrice && <div className="text-xs text-slate-400 font-bold mt-1 text-right">{res.unit || 'DH'}</div>}
                                                                     </div>
-                                                                    <button onClick={() => openFile(res.path, res.source)} className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm"><Icon name="Eye" size={14}/> Voir</button>
+                                                                    <div className="flex gap-2">
+                                                                        {validPrice && <button onClick={() => openCalculator(res, pricesObj)} className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm" title="Calculatrice"><Icon name="Calculator" size={16}/></button>}
+                                                                        <button onClick={() => openFile(res.path, res.source)} className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm"><Icon name="Eye" size={14}/> Voir</button>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         );
@@ -1203,15 +913,7 @@
                                             <div className="animate-fade">
                                                 <h3 className="text-sm font-bold uppercase text-slate-400 mb-4 pl-2 flex items-center gap-2 border-t pt-6 mt-6 md:border-none md:pt-0 md:mt-0"><Icon name="FileText" size={16}/> Fiches ({searchResults.fiches.length})</h3>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    {searchResults.fiches.map((f, i) => (
-                                                        <div key={i} className="bg-white p-4 rounded-2xl border border-slate-100 hover:border-indigo-300 hover:shadow-md transition-all flex items-center justify-between group">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0"><Icon name="FileText" size={20}/></div>
-                                                                <div className="truncate pr-4"><div className="font-bold text-slate-700 truncate">{f.name}</div><div className="text-xs text-slate-400">PDF</div></div>
-                                                            </div>
-                                                            <button onClick={() => openFile(f.path, f.name)} className="p-2 text-slate-400 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 rounded-lg transition-colors"><Icon name="Eye" size={18}/></button>
-                                                        </div>
-                                                    ))}
+                                                    {searchResults.fiches.map((f, i) => (<div key={i} className="bg-white p-4 rounded-2xl border border-slate-100 hover:border-indigo-300 hover:shadow-md transition-all flex items-center justify-between group"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0"><Icon name="FileText" size={20}/></div><div className="truncate pr-4"><div className="font-bold text-slate-700 truncate">{f.name}</div><div className="text-xs text-slate-400">PDF</div></div></div><button onClick={() => openFile(f.path, f.name)} className="p-2 text-slate-400 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 rounded-lg transition-colors"><Icon name="Eye" size={18}/></button></div>))}
                                                 </div>
                                             </div>
                                         )}
@@ -1226,123 +928,15 @@
                                             <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-slate-800"><Icon name="Settings" /> Paramètres</h3>
                                             <div className="space-y-4">
                                                 <div className="grid gap-1"><label className="text-[10px] font-bold uppercase text-slate-400">Token Dropbox</label><input type="password" value={dbxConfig.token} onChange={e => setDbxConfig({...dbxConfig, token: e.target.value})} className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono" /></div>
-                                                
-                                                {/* REFRESH TOKEN OAUTH SECTION */}
-                                                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
-                                                    <label className="text-[10px] font-bold uppercase text-blue-700 block mb-2">Connexion Permanente (OAuth)</label>
-                                                    <div className="grid gap-1 mb-2"><input value={dbxConfig.appKey} onChange={e => setDbxConfig({...dbxConfig, appKey: e.target.value})} className="p-2 bg-white border border-blue-200 rounded text-xs" placeholder="App Key"/></div>
-                                                    <div className="grid gap-1 mb-2"><input type="password" value={dbxConfig.appSecret} onChange={e => setDbxConfig({...dbxConfig, appSecret: e.target.value})} className="p-2 bg-white border border-blue-200 rounded text-xs" placeholder="App Secret"/></div>
-                                                    
-                                                    {dbxConfig.appKey && (
-                                                        <a href={`https://www.dropbox.com/oauth2/authorize?client_id=${dbxConfig.appKey}&token_access_type=offline&response_type=code`} target="_blank" className="block w-full text-center bg-blue-600 text-white py-2 rounded-lg text-xs font-bold mb-2 hover:bg-blue-700">1. Autoriser l'App</a>
-                                                    )}
-                                                    
-                                                    <div className="flex gap-2">
-                                                        <input value={authCode} onChange={e => setAuthCode(e.target.value)} className="flex-1 p-2 border rounded-lg text-xs" placeholder="2. Coller le Code"/>
-                                                        <button onClick={handleExchangeCode} disabled={syncStatus === 'working'} className="bg-green-600 text-white px-3 rounded-lg hover:bg-green-700 font-bold text-xs">Valider</button>
-                                                    </div>
-                                                    {dbxConfig.refreshToken && (
-                                                        <div className="mt-3 bg-white p-2 rounded border border-green-200">
-                                                            <div className="text-[10px] text-green-600 font-bold mb-1">✅ Token Permanent Actif</div>
-                                                            <label className="text-[9px] font-bold uppercase text-slate-400 block mb-1">REFRESH TOKEN (A COPIER DANS LE CODE)</label>
-                                                            <div className="flex items-center gap-2">
-                                                                <input readOnly value={dbxConfig.refreshToken} className="flex-1 p-1 bg-slate-50 border border-slate-200 rounded text-[10px] font-mono text-slate-500 select-all" onClick={e => e.target.select()}/>
-                                                                <button onClick={() => { navigator.clipboard.writeText(dbxConfig.refreshToken); alert("Copié !"); }} className="p-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-500" title="Copier"><Icon name="Copy" size={12}/></button>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="grid gap-1"><label className="text-[10px] font-bold uppercase text-slate-400">Clé Gemini</label><input type="password" value={dbxConfig.geminiKey} onChange={e => setDbxConfig({...dbxConfig, geminiKey: e.target.value})} className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono" /></div>
-                                                <div className="grid gap-1"><label className="text-[10px] font-bold uppercase text-slate-400">Dossier Tarifs</label><input value={dbxConfig.pathTarifs} onChange={e => setDbxConfig({...dbxConfig, pathTarifs: e.target.value})} className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs" /></div>
-                                                <div className="grid gap-1"><label className="text-[10px] font-bold uppercase text-slate-400">Dossier Fiches</label><input value={dbxConfig.pathFT} onChange={e => setDbxConfig({...dbxConfig, pathFT: e.target.value})} className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs" /></div>
-                                                
-                                                {/* BOUTONS SAUVEGARDE */}
-                                                <div className="pt-4 mt-4 border-t border-slate-100 flex flex-col gap-2">
-                                                    <button onClick={handleManualCloudSave} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors shadow-sm">
-                                                        <Icon name="CloudUpload" size={14}/> Publier la Base sur le Cloud (MàJ)
-                                                    </button>
-                                                    <button onClick={handleLocalExport} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors">
-                                                        <Icon name="HardDriveDownload" size={14}/> Télécharger Backup Local (Secours)
-                                                    </button>
-                                                </div>
+                                                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100"><label className="text-[10px] font-bold uppercase text-blue-700 block mb-2">Connexion Permanente (OAuth)</label><div className="grid gap-1 mb-2"><input value={dbxConfig.appKey} onChange={e => setDbxConfig({...dbxConfig, appKey: e.target.value})} className="p-2 bg-white border border-blue-200 rounded text-xs" placeholder="App Key"/></div><div className="grid gap-1 mb-2"><input type="password" value={dbxConfig.appSecret} onChange={e => setDbxConfig({...dbxConfig, appSecret: e.target.value})} className="p-2 bg-white border border-blue-200 rounded text-xs" placeholder="App Secret"/></div>{dbxConfig.appKey && (<a href={`https://www.dropbox.com/oauth2/authorize?client_id=${dbxConfig.appKey}&token_access_type=offline&response_type=code`} target="_blank" className="block w-full text-center bg-blue-600 text-white py-2 rounded-lg text-xs font-bold mb-2 hover:bg-blue-700">1. Autoriser l'App</a>)}<div className="flex gap-2"><input value={authCode} onChange={e => setAuthCode(e.target.value)} className="flex-1 p-2 border rounded-lg text-xs" placeholder="2. Coller le Code"/><button onClick={handleExchangeCode} disabled={syncStatus === 'working'} className="bg-green-600 text-white px-3 rounded-lg hover:bg-green-700 font-bold text-xs">Valider</button></div>{dbxConfig.refreshToken && (<div className="mt-3 bg-white p-2 rounded border border-green-200"><div className="text-[10px] text-green-600 font-bold mb-1">✅ Token Permanent Actif</div><label className="text-[9px] font-bold uppercase text-slate-400 block mb-1">REFRESH TOKEN (A COPIER DANS LE CODE)</label><div className="flex items-center gap-2"><input readOnly value={dbxConfig.refreshToken} className="flex-1 p-1 bg-slate-50 border border-slate-200 rounded text-[10px] font-mono text-slate-500 select-all" onClick={e => e.target.select()}/><button onClick={() => { navigator.clipboard.writeText(dbxConfig.refreshToken); alert("Copié !"); }} className="p-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-500" title="Copier"><Icon name="Copy" size={12}/></button></div></div>)}</div>
+                                                <div className="grid gap-1"><label className="text-[10px] font-bold uppercase text-slate-400">Clé Gemini</label><input type="password" value={dbxConfig.geminiKey} onChange={e => setDbxConfig({...dbxConfig, geminiKey: e.target.value})} className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono" /></div><div className="grid gap-1"><label className="text-[10px] font-bold uppercase text-slate-400">Dossier Tarifs</label><input value={dbxConfig.pathTarifs} onChange={e => setDbxConfig({...dbxConfig, pathTarifs: e.target.value})} className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs" /></div><div className="grid gap-1"><label className="text-[10px] font-bold uppercase text-slate-400">Dossier Fiches</label><input value={dbxConfig.pathFT} onChange={e => setDbxConfig({...dbxConfig, pathFT: e.target.value})} className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs" /></div>
+                                                <div className="pt-4 mt-4 border-t border-slate-100 flex flex-col gap-2"><button onClick={handleManualCloudSave} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors shadow-sm"><Icon name="CloudUpload" size={14}/> Publier la Base sur le Cloud (MàJ)</button><button onClick={handleLocalExport} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors"><Icon name="HardDriveDownload" size={14}/> Télécharger Backup Local (Secours)</button></div>
                                             </div>
                                         </div>
                                         <div className="bg-slate-900 text-green-400 p-5 rounded-3xl font-mono text-xs h-60 overflow-y-auto shadow-inner"><div className="opacity-50 border-b border-green-800 pb-2 mb-2">System Logs</div><div className="whitespace-pre-wrap">{syncLog || "Prêt."}</div></div>
                                     </div>
-                                    
-                                    {/* Modal Upload Admin */}
-                                    {showAdminUploadModal && (
-                                        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-                                            <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full animate-fade relative">
-                                                <button onClick={() => setShowAdminUploadModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><Icon name="X"/></button>
-                                                <div className="mb-6"><div className="inline-flex bg-blue-100 p-3 rounded-full text-blue-600 mb-3"><Icon name="FilePlus" size={24}/></div><h2 className="text-xl font-bold">Gestion Tarifs</h2><p className="text-sm text-slate-500">Ajouter ou remplacer un catalogue</p></div>
-                                                <form onSubmit={handleManualTarifUpload} className="space-y-4">
-                                                    <div className="flex bg-slate-50 p-1 rounded-xl">
-                                                        <button type="button" onClick={() => setAdminUploadMode('new')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${adminUploadMode === 'new' ? 'bg-white shadow text-blue-600' : 'text-slate-400'}`}>Nouveau</button>
-                                                        <button type="button" onClick={() => setAdminUploadMode('update')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${adminUploadMode === 'update' ? 'bg-white shadow text-blue-600' : 'text-slate-400'}`}>Mise à jour</button>
-                                                    </div>
-                                                    {adminUploadMode === 'update' && (
-                                                        <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Tarif à remplacer</label><select className="w-full p-3 border rounded-xl text-sm bg-white" required value={targetTarifId} onChange={e => setTargetTarifId(e.target.value)}><option value="">-- Choisir --</option>{tarifs.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
-                                                    )}
-                                                    <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Fichier PDF</label><input type="file" accept="application/pdf" required ref={adminFileInputRef} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/></div>
-                                                    
-                                                    {/* CHAMP T4 */}
-                                                    <div>
-                                                        <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Remise T4 (%)</label>
-                                                        <input type="number" min="0" max="100" step="0.1" value={t4Value} onChange={e => setT4Value(e.target.value)} className="w-full p-3 border rounded-xl text-sm bg-slate-50 font-mono text-orange-600 font-bold" placeholder="0.0"/>
-                                                        <p className="text-[10px] text-slate-400 mt-1">Sera déduit du prix TTC ou EXO pour l'affichage.</p>
-                                                    </div>
-
-                                                    <button disabled={syncStatus === 'working'} className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold mt-2 hover:bg-slate-900 disabled:opacity-50 flex items-center justify-center gap-2">{syncStatus === 'working' ? <Icon name="Loader2" className="animate-spin"/> : <Icon name="UploadCloud"/>} Valider</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[600px]">
-                                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                                            <h3 className="font-bold text-lg text-slate-800">Indexation</h3>
-                                            <div className="flex gap-2">
-                                                <button onClick={handleDeleteAllTarifs} className="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 transition-colors"><Icon name="Trash2" size={14}/> Tout Supprimer</button>
-                                                <button onClick={() => { setAdminUploadMode('new'); setShowAdminUploadModal(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all active:scale-95"><Icon name="Plus"/> Gestion Tarifs</button>
-                                                <button onClick={() => runFullSync(false)} disabled={syncStatus === 'working'} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:opacity-50"><Icon name={syncStatus === 'working' ? "Loader2" : "RefreshCw"} className={syncStatus === 'working' ? "animate-spin" : ""}/> Re-Scan Global</button>
-                                            </div>
-                                        </div>
-                                        <div className="flex-1 overflow-auto p-0">
-                                            <table className="w-full text-sm text-left">
-                                                <thead className="bg-white sticky top-0 shadow-sm text-slate-500 font-bold text-[10px] uppercase">
-                                                    <tr><th className="p-4">Fichier</th><th className="p-4">Type</th><th className="p-4 text-center">Info</th><th className="p-4 text-right">Actions</th></tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-slate-50">
-                                                    {tarifs.map(t => (
-                                                        <tr key={t.id} className="hover:bg-blue-50/30 group">
-                                                            <td className="p-4 font-bold text-slate-700">{t.name}</td>
-                                                            <td className="p-4"><span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">TARIF</span></td>
-                                                            <td className="p-4 text-center">
-                                                                <div className="text-blue-600 font-bold">{t.products?.length} produits</div>
-                                                                {t.t4_percentage > 0 && <div className="text-xs text-orange-500 font-bold">T4: -{t.t4_percentage}%</div>}
-                                                            </td>
-                                                            <td className="p-4 text-right">
-                                                                <button onClick={() => handleDeleteEntry('tarif', t.id, t.name)} className="text-slate-300 hover:text-red-500 transition-colors p-2" title="Supprimer"><Icon name="Trash2" size={16}/></button>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                    {fiches.map(f => (
-                                                        <tr key={f.id} className="hover:bg-indigo-50/30 group">
-                                                            <td className="p-4 font-bold text-slate-700">{f.name}</td>
-                                                            <td className="p-4"><span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold">FICHE</span></td>
-                                                            <td className="p-4 text-center text-slate-400">PDF</td>
-                                                            <td className="p-4 text-right">
-                                                                <button onClick={() => handleDeleteEntry('fiche', f.id, f.name)} className="text-slate-300 hover:text-red-500 transition-colors p-2" title="Supprimer"><Icon name="Trash2" size={16}/></button>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
+                                    {showAdminUploadModal && (<div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4"><div className="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full animate-fade relative"><button onClick={() => setShowAdminUploadModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><Icon name="X"/></button><div className="mb-6"><div className="inline-flex bg-blue-100 p-3 rounded-full text-blue-600 mb-3"><Icon name="FilePlus" size={24}/></div><h2 className="text-xl font-bold">Gestion Tarifs</h2><p className="text-sm text-slate-500">Ajouter ou remplacer un catalogue</p></div><form onSubmit={handleManualTarifUpload} className="space-y-4"><div className="flex bg-slate-50 p-1 rounded-xl"><button type="button" onClick={() => setAdminUploadMode('new')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${adminUploadMode === 'new' ? 'bg-white shadow text-blue-600' : 'text-slate-400'}`}>Nouveau</button><button type="button" onClick={() => setAdminUploadMode('update')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${adminUploadMode === 'update' ? 'bg-white shadow text-blue-600' : 'text-slate-400'}`}>Mise à jour</button></div>{adminUploadMode === 'update' && (<div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Tarif à remplacer</label><select className="w-full p-3 border rounded-xl text-sm bg-white" required value={targetTarifId} onChange={e => setTargetTarifId(e.target.value)}><option value="">-- Choisir --</option>{tarifs.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>)}<div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Fichier PDF</label><input type="file" accept="application/pdf" required ref={adminFileInputRef} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/></div><div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Remise T4 (%)</label><input type="number" min="0" max="100" step="0.1" value={t4Value} onChange={e => setT4Value(e.target.value)} className="w-full p-3 border rounded-xl text-sm bg-slate-50 font-mono text-orange-600 font-bold" placeholder="0.0"/><p className="text-[10px] text-slate-400 mt-1">Sera déduit du prix TTC ou EXO pour l'affichage.</p></div><button disabled={syncStatus === 'working'} className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold mt-2 hover:bg-slate-900 disabled:opacity-50 flex items-center justify-center gap-2">{syncStatus === 'working' ? <Icon name="Loader2" className="animate-spin"/> : <Icon name="UploadCloud"/>} Valider</button></form></div></div>)}
+                                    <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[600px]"><div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50"><h3 className="font-bold text-lg text-slate-800">Indexation</h3><div className="flex gap-2"><button onClick={handleDeleteAllTarifs} className="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 transition-colors"><Icon name="Trash2" size={14}/> Tout Supprimer</button><button onClick={() => { setAdminUploadMode('new'); setShowAdminUploadModal(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all active:scale-95"><Icon name="Plus"/> Gestion Tarifs</button><button onClick={() => runFullSync(false)} disabled={syncStatus === 'working'} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:opacity-50"><Icon name={syncStatus === 'working' ? "Loader2" : "RefreshCw"} className={syncStatus === 'working' ? "animate-spin" : ""}/> Re-Scan Global</button></div></div><div className="flex-1 overflow-auto p-0"><table className="w-full text-sm text-left"><thead className="bg-white sticky top-0 shadow-sm text-slate-500 font-bold text-[10px] uppercase"><tr><th className="p-4">Fichier</th><th className="p-4">Type</th><th className="p-4 text-center">Info</th><th className="p-4 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-50">{tarifs.map(t => (<tr key={t.id} className="hover:bg-blue-50/30 group"><td className="p-4 font-bold text-slate-700">{t.name}</td><td className="p-4"><span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">TARIF</span></td><td className="p-4 text-center"><div className="text-blue-600 font-bold">{t.products?.length} produits</div>{t.t4_percentage > 0 && <div className="text-xs text-orange-500 font-bold">T4: -{t.t4_percentage}%</div>}</td><td className="p-4 text-right"><button onClick={() => handleDeleteEntry('tarif', t.id, t.name)} className="text-slate-300 hover:text-red-500 transition-colors p-2" title="Supprimer"><Icon name="Trash2" size={16}/></button></td></tr>))}{fiches.map(f => (<tr key={f.id} className="hover:bg-indigo-50/30 group"><td className="p-4 font-bold text-slate-700">{f.name}</td><td className="p-4"><span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold">FICHE</span></td><td className="p-4 text-center text-slate-400">PDF</td><td className="p-4 text-right"><button onClick={() => handleDeleteEntry('fiche', f.id, f.name)} className="text-slate-300 hover:text-red-500 transition-colors p-2" title="Supprimer"><Icon name="Trash2" size={16}/></button></td></tr>))}</tbody></table></div></div></div>
                             )}
 
                             {activeTab === 'users' && currentUser.role === 'admin' && (
