@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TarifiersDBX-V1 (Stable & Connecté)</title>
+    <title>TarifiersDBX-V2 (Secured)</title>
     <!-- React & UI -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -33,10 +33,16 @@
         .pdf-canvas-container { overflow: auto; display: flex; justify-content: center; background-color: #525659; height: 100%; }
         canvas { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); margin: 20px 0; }
         
-        /* Scrollbar moderne */
+        /* Scrollbar moderne pour le rapport */
         .modern-scroll::-webkit-scrollbar { width: 6px; }
         .modern-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
         .modern-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+
+        /* Toast Animation */
+        .toast-enter { transform: translateX(100%); opacity: 0; }
+        .toast-enter-active { transform: translateX(0); opacity: 1; transition: all 300ms ease-out; }
+        .toast-exit { transform: translateX(0); opacity: 1; }
+        .toast-exit-active { transform: translateX(100%); opacity: 0; transition: all 300ms ease-in; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -88,54 +94,21 @@
         // Token de secours
         const HARDCODED_DBX_TOKEN = "sl.u.AGN2mejF9zW-5NxVUc0Dj2J-OOvQTGfALzT8nmGyhphGQpfy5RXRWeDFENtC44ThCRooxROaUzIxLUnblDYZm__P9Pru4DbwrPO1teKgGY-Q3R0UzPKit2feeeUFboEN50xzqiKzex9u20aLb5oyOaVvMLX007bdB7hOYcKQnMCFk4PB1pXufYtsl_x5-UxITVEa9kRrfXDQhmQBNBmp7adC96_J6CM-7i9-Jp8jlfhRi2WGM_OdsBXjtOUj_4QZKQ-CTgFTTvVdIzkSq0cqQhSjow7VUf41j6WJthfi3E8Y1eWb0DaJlDK7-Ivx8MedYdHGk0dM_Ug15nIJkOb4H7DvW_thLe-gTefvccGiuNXG18TI_ndofQj0GkhtZ8PmHNUNr8XpB71PLmyKutIHd2aeZQqXpmSf4EySkRm2ujMiSjIusVN5FSqj4DzgdR7no9v8i4gR9NrhCMlDyZ_oLDyHo-UE5iX_U-S3CcTN5EZgshrrT9Wg86fsDt1QChmw_PwfSaWfJlbY2PTqwyk9w1-HM0KKH1QO5L5NtcSJrD4cjg7hHbkbkt-UpawIoLfhPS8gI6QlYemCpaXn38ItPdJCIUxR_x5dQlIMAoQz-ubhK4A1YYM4UcvFGoaGoVoIbLD_AyFuqWcE-xU_hxpuJVl31j6I83J7_RARdiB1kupqNVtTUWk8khYefSNyYG40wX8RGonfFYPnpj0M_SBv3JfW3jf-IGMv-f2q9vV79FkqHVdImm0n5tgRecYQEHv5A6dA-S6HWU1wF57wBtuaVbHytepqbtlSZvOgJxgJ-rRT-3mIs67WA6I-MiqH--D4-jFv6ILfztvx0C9QBRniw4c9F5FSpojHQ-3C8P6c_YQaQsnjQ3wDHhTPGyOqMn5Di4-2Zhmh52VVnlapYyVyzQ-GhsyIh57R80c_VplkYhfO93aBav3FMF5j6eLCEOLI8dE0PK2eD1bCxq55kbyaYi5tlMXO4aYRsSTCMEolbCKwUKOBqobKPGiLP4gjwppBoFyU8xEKP14vFJc2VH3CgD1jJ0lTQ9tnIAWmsIQQXxFyotlJIdyebmEE5Sv61dhgQUEn2knotf_naw-l3mHNoIEiL4X8HCljVG7MP-EAIOYy2eVSl2IbsgPw_LO8SAo47sfajecs7OLuCVAyZakUhnLVTFrGRNFTkidfx6EGpgEjlVb428d0qwqVarmS8DvytrN5ZWtys_i6DulrED6orLFPQhIw52d8RmuwW_TnjPQP09ZZFyNcg_hGhQZzl_kIpSOWwJYLvTn2bJx2jMxDToLS"; 
         
-        // COMPTE SUPER ADMIN INJECTÉ
         const DEFAULT_USERS = [
+            { id: 'SUPERADMIN', pass: 'SUPER', role: 'admin', name: 'Super Admin', searchCount: 0 },
             { id: 'admin', pass: 'admin', role: 'admin', name: 'Administrateur', searchCount: 0 },
-            { id: 'collab', pass: '1234', role: 'viewer', name: 'Collaborateur', searchCount: 0 },
-            { id: 'KHALID', pass: 'ADMIN26', role: 'admin', name: 'Super Admin Khalid', searchCount: 0 }
+            { id: 'collab', pass: '1234', role: 'viewer', name: 'Collaborateur', searchCount: 0 }
         ];
 
         const QUOTES = [
+            { text: "La sécurité n'est pas un produit, mais un processus.", author: "Bruce Schneier" },
             { text: "La seule façon de faire du bon travail est d'aimer ce que vous faites.", author: "Steve Jobs" },
             { text: "Le succès n'est pas final, l'échec n'est pas fatal : c'est le courage de continuer qui compte.", author: "Winston Churchill" },
             { text: "La qualité signifie bien faire les choses quand personne ne regarde.", author: "Henry Ford" },
-            { text: "La simplicité est la sophistication suprême.", author: "Léonard de Vinci" },
-            { text: "Il n'y a pas de vent favorable pour celui qui ne sait pas où il va.", author: "Sénèque" }
+            { text: "La simplicité est la sophistication suprême.", author: "Léonard de Vinci" }
         ];
 
         const delay = ms => new Promise(res => setTimeout(res, ms));
-
-        // --- UTILS DEVICE FINGERPRINT ---
-        const getDeviceId = () => {
-            let id = localStorage.getItem('tdbx_device_id');
-            if (!id) {
-                id = 'dev_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-                localStorage.setItem('tdbx_device_id', id);
-            }
-            return id;
-        };
-
-        const getDeviceName = () => {
-            const ua = navigator.userAgent;
-            let browser = "Inconnu";
-            if (ua.indexOf("Chrome") > -1) browser = "Chrome";
-            else if (ua.indexOf("Safari") > -1) browser = "Safari";
-            else if (ua.indexOf("Firefox") > -1) browser = "Firefox";
-            
-            const os = /iPhone|iPad|iPod|Android/i.test(ua) ? "Mobile" : "PC/Mac";
-            return `${browser} sur ${os}`;
-        };
-
-        const parsePrice = (val) => {
-            if (typeof val === 'number') return val;
-            if (!val) return 0;
-            let str = String(val).trim();
-            if (str.includes(',')) {
-                str = str.replace(/\./g, '');
-                str = str.replace(',', '.');
-            }
-            return parseFloat(str.replace(/[^0-9.-]/g, '')) || 0;
-        };
 
         // --- OAUTH HELPERS ---
         const exchangeCodeForToken = async (code, appKey, appSecret) => {
@@ -324,6 +297,19 @@
             return <span ref={iconRef} className="inline-flex items-center justify-center" />;
         };
 
+        // --- UTILS PARSING PRIX EUROPEENS ---
+        const parsePrice = (priceInput) => {
+            if (priceInput === null || priceInput === undefined) return 0;
+            let str = String(priceInput).trim();
+            if (/^\d+(\.\d+)?$/.test(str)) return parseFloat(str);
+            str = str.replace(/\s/g, '');
+            str = str.replace(/\./g, '');
+            str = str.replace(',', '.');
+            str = str.replace(/[^0-9.]/g, '');
+            const val = parseFloat(str);
+            return isNaN(val) ? 0 : val;
+        };
+
         // --- UTILS COMPARISON ---
         const generateFluctuationReport = (oldProducts, newProducts) => {
             const report = { date: new Date().toLocaleString(), added: [], removed: [], changed: [] };
@@ -357,8 +343,8 @@
                         report.changed.push({ 
                             name: newP.name, 
                             packaging: newP.packaging,
-                            oldPrice: priceOld, 
-                            newPrice: priceNew, 
+                            oldPrice: priceOld.toFixed(2), 
+                            newPrice: priceNew.toFixed(2), 
                             diff: (priceNew - priceOld).toFixed(2),
                             unit: newP.unit || 'DH'
                         });
@@ -376,6 +362,25 @@
             return report;
         };
 
+        // --- HELPER COPY CLIPBOARD ---
+        const copyToClipboard = (text) => {
+             const textArea = document.createElement("textarea");
+             textArea.value = text;
+             textArea.style.position = "fixed";
+             document.body.appendChild(textArea);
+             textArea.focus();
+             textArea.select();
+             try {
+                document.execCommand('copy');
+                return true;
+             } catch (err) {
+                console.error('Erreur copie', err);
+                return false;
+             } finally {
+                document.body.removeChild(textArea);
+             }
+        };
+
         // --- APPLICATION ---
         function App() {
             // STATE
@@ -384,17 +389,17 @@
             const [loginForm, setLoginForm] = useState({ username: '', password: '' });
             const [loginError, setLoginError] = useState('');
 
-            // DEVICE AUTH STATES
-            const [deviceId, setDeviceId] = useState('');
-            const [authorizedDevices, setAuthorizedDevices] = useState([]);
-            const [pendingDevices, setPendingDevices] = useState([]);
-            const [deviceStatus, setDeviceStatus] = useState('checking'); // checking, allowed, pending, blocked
-
             const [tarifs, setTarifs] = useState([]);
             const [fiches, setFiches] = useState([]); 
             const [dbHistory, setDbHistory] = useState([]);
             const [dbMeta, setDbMeta] = useState(null);
             
+            // SECURITY STATES
+            const [pendingRequests, setPendingRequests] = useState([]);
+            const [authorizedDevices, setAuthorizedDevices] = useState([]);
+            const [deviceId, setDeviceId] = useState('');
+
+            // Initialisation de la config avec décodage
             const [dbxConfig, setDbxConfig] = useState({ 
                 token: HARDCODED_DBX_TOKEN, 
                 refreshToken: HARDCODED_REFRESH_TOKEN || '', 
@@ -415,10 +420,35 @@
             const [currentQuote, setCurrentQuote] = useState(null);
             const [showConfigModal, setShowConfigModal] = useState(false); 
 
-            // CALCULATRICE & VIEWERS
+            // UI Notifications & Confirmations
+            const [toasts, setToasts] = useState([]);
+            const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null });
+
+            const showToast = (message, type = 'info') => {
+                const id = Date.now();
+                setToasts(prev => [...prev, { id, message, type }]);
+                setTimeout(() => {
+                    setToasts(prev => prev.filter(t => t.id !== id));
+                }, 4000);
+            };
+
+            const askConfirm = (title, message, onConfirm) => {
+                setConfirmModal({ show: true, title, message, onConfirm });
+            };
+
+            const handleConfirmYes = async () => {
+                if (confirmModal.onConfirm) await confirmModal.onConfirm();
+                setConfirmModal({ ...confirmModal, show: false });
+            };
+
+            // CALCULATRICE STATE
             const [calcState, setCalcState] = useState({ show: false, product: null, basePrice: 0, baseLabel: '' });
             const [extraDiscount, setExtraDiscount] = useState('');
+
+            // REPORT VIEWER STATE
             const [viewingReport, setViewingReport] = useState(null);
+
+            // VISUALISATEUR STATE
             const [viewingFile, setViewingFile] = useState(null);
             const [isFileLoading, setIsFileLoading] = useState(false);
             const [pdfState, setPdfState] = useState({ pdfDoc: null, pageNum: 1, numPages: 0, scale: 1.0 });
@@ -430,6 +460,8 @@
             const [targetTarifId, setTargetTarifId] = useState('');
             const [authCode, setAuthCode] = useState(''); 
             const [t4Value, setT4Value] = useState(0);
+            
+            // USER EDIT UI
             const [editingUserIdx, setEditingUserIdx] = useState(null);
             const [userFormData, setUserFormData] = useState({ name: '', login: '', pass: '', role: 'viewer' });
             const [showPassword, setShowPassword] = useState({});
@@ -437,27 +469,38 @@
             const uploadInputRef = useRef(null);
             const adminFileInputRef = useRef(null);
 
+            // --- INIT DEVICE ID ---
+            useEffect(() => {
+                let did = localStorage.getItem('tdbx_deviceId');
+                if (!did) {
+                    did = 'dev_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+                    localStorage.setItem('tdbx_deviceId', did);
+                }
+                setDeviceId(did);
+            }, []);
+
             // --- INIT & PERSISTENCE ---
             useEffect(() => {
                 const storedConfig = localStorage.getItem('tdbx_config');
                 const storedUsers = localStorage.getItem('tdbx_users');
-                
-                // Device ID Generation
-                const myDeviceId = getDeviceId();
-                setDeviceId(myDeviceId);
+                const storedTarifs = localStorage.getItem('tdbx_tarifs'); 
+                const storedFiches = localStorage.getItem('tdbx_fiches');
+                const storedHistory = localStorage.getItem('tdbx_history');
+                const storedMeta = localStorage.getItem('tdbx_meta');
 
                 if (storedConfig) {
                     const parsed = JSON.parse(storedConfig);
-                    // FORCE OVERRIDE si le token hardcodé a changé
-                    if (HARDCODED_DBX_TOKEN && (!parsed.token || HARDCODED_DBX_TOKEN.slice(-10) !== parsed.token.slice(-10))) {
-                        parsed.token = HARDCODED_DBX_TOKEN;
-                    }
+                    if(HARDCODED_DBX_TOKEN && !parsed.token) parsed.token = HARDCODED_DBX_TOKEN;
+                    
+                    const decodedRefresh = HARDCODED_REFRESH_TOKEN;
+                    const decodedKey = _d(HARDCODED_APP_KEY);
+                    const decodedSecret = _d(HARDCODED_APP_SECRET);
+                    const decodedGemini = _d(HARDCODED_GEMINI_KEY);
 
-                    // Force Hardcoded Refresh token if available
-                    if(HARDCODED_REFRESH_TOKEN) parsed.refreshToken = HARDCODED_REFRESH_TOKEN;
-                    if(HARDCODED_APP_KEY) parsed.appKey = _d(HARDCODED_APP_KEY);
-                    if(HARDCODED_APP_SECRET) parsed.appSecret = _d(HARDCODED_APP_SECRET);
-                    if(HARDCODED_GEMINI_KEY) parsed.geminiKey = _d(HARDCODED_GEMINI_KEY);
+                    if(decodedRefresh) parsed.refreshToken = decodedRefresh;
+                    if(decodedKey) parsed.appKey = decodedKey;
+                    if(decodedSecret) parsed.appSecret = decodedSecret;
+                    if(decodedGemini) parsed.geminiKey = decodedGemini;
                     
                     setDbxConfig(parsed);
                 } else {
@@ -472,6 +515,10 @@
                 }
 
                 if (storedUsers) setUsers(JSON.parse(storedUsers));
+                if (storedTarifs) setTarifs(JSON.parse(storedTarifs));
+                if (storedFiches) setFiches(JSON.parse(storedFiches));
+                if (storedHistory) setDbHistory(JSON.parse(storedHistory));
+                if (storedMeta) setDbMeta(JSON.parse(storedMeta));
             }, []);
 
             useEffect(() => { if(currentUser) localStorage.setItem('tdbx_config', JSON.stringify(dbxConfig)); }, [dbxConfig, currentUser]);
@@ -487,9 +534,9 @@
                 return () => clearInterval(interval);
             }, [currentUser, dbxConfig.token, dbxConfig.refreshToken, view]);
 
-            // --- OAUTH FLOW & CLOUD OPS (Generic) ---
+            // --- OAUTH FLOW ---
             const handleExchangeCode = async () => {
-                if(!authCode || !dbxConfig.appKey || !dbxConfig.appSecret) return alert("Infos manquantes.");
+                if(!authCode || !dbxConfig.appKey || !dbxConfig.appSecret) return showToast("Infos manquantes (App Key, Secret, Code).", 'error');
                 setSyncStatus('working');
                 try {
                     const data = await exchangeCodeForToken(authCode, dbxConfig.appKey, dbxConfig.appSecret);
@@ -497,13 +544,24 @@
                     setDbxConfig(newConfig);
                     localStorage.setItem('tdbx_config', JSON.stringify(newConfig));
                     await saveToCloud(null, null, null, null, newConfig);
-                    setSyncLog("✅ Refresh Token configuré et partagé !"); setSyncStatus('success'); setAuthCode(''); alert("Succès !");
-                } catch(e) { setSyncLog("❌ Erreur OAuth : " + e.message); setSyncStatus('error'); alert("Erreur : " + e.message); }
+                    setSyncLog("✅ Refresh Token configuré et partagé !");
+                    setSyncStatus('success');
+                    setAuthCode('');
+                    showToast("Succès !", 'success');
+                } catch(e) {
+                    setSyncLog("❌ Erreur OAuth : " + e.message);
+                    setSyncStatus('error');
+                    showToast("Erreur : " + e.message, 'error');
+                }
             };
 
-            const saveToCloud = async (newTarifs, newFiches, newHistory, newUsers, specificConfig, newAuthDevices, newPendingDevices) => {
+            // --- CLOUD OPERATIONS ---
+            const saveToCloud = async (newTarifs, newFiches, newHistory, newUsers, specificConfig, newPending, newAuthorized) => {
                 const configToSave = specificConfig || {
-                    refreshToken: dbxConfig.refreshToken, appKey: dbxConfig.appKey, appSecret: dbxConfig.appSecret, geminiKey: dbxConfig.geminiKey
+                    refreshToken: dbxConfig.refreshToken,
+                    appKey: dbxConfig.appKey,
+                    appSecret: dbxConfig.appSecret,
+                    geminiKey: dbxConfig.geminiKey
                 };
                 const dataToSave = {
                     meta: { date: new Date().toLocaleString(), user: currentUser?.name || 'System' },
@@ -512,9 +570,8 @@
                     tarifs: newTarifs || tarifs,
                     fiches: newFiches || fiches,
                     users: newUsers || users,
-                    // SECURITY FIELDS
-                    authorized_devices: newAuthDevices || authorizedDevices,
-                    pending_devices: newPendingDevices || pendingDevices
+                    pendingRequests: newPending || pendingRequests,
+                    authorizedDevices: newAuthorized || authorizedDevices
                 };
                 await dbxUploadFile(dbxConfig, setDbxConfig, '/db_tarifs.json', new Blob([JSON.stringify(dataToSave)], { type: 'application/json' }));
             };
@@ -526,189 +583,500 @@
                     const blob = await dbxDownloadFile(dbxConfig, setDbxConfig, '/db_tarifs.json');
                     const text = await blob.text();
                     const data = JSON.parse(text);
-                    
-                    setTarifs(data.tarifs || []); setFiches(data.fiches || []); setDbHistory(data.history || []);
+                    setTarifs(data.tarifs || []);
+                    setFiches(data.fiches || []);
+                    setDbHistory(data.history || []);
                     if (data.meta) setDbMeta(data.meta);
-                    if (data.users && Array.isArray(data.users)) { setUsers(data.users); localStorage.setItem('tdbx_users', JSON.stringify(data.users)); }
-                    
-                    // DEVICE SECURITY SYNC
-                    const authDevs = data.authorized_devices || [];
-                    const pendDevs = data.pending_devices || [];
-                    setAuthorizedDevices(authDevs);
-                    setPendingDevices(pendDevs);
-
-                    // Check My Device Status
-                    const myId = getDeviceId();
-                    // AUTO-APPROVE ADMIN IF LIST IS EMPTY (First install safety)
-                    const isFirstAdmin = authDevs.length === 0 && (!currentUser || currentUser.role === 'admin');
-
-                    if (authDevs.includes(myId) || isFirstAdmin) {
-                        setDeviceStatus('allowed');
-                    } else if (pendDevs.find(d => d.id === myId)) {
-                        setDeviceStatus('pending');
-                    } else {
-                        setDeviceStatus('blocked');
+                    if (data.users && Array.isArray(data.users)) {
+                        setUsers(data.users);
+                        localStorage.setItem('tdbx_users', JSON.stringify(data.users));
                     }
+                    if (data.pendingRequests) setPendingRequests(data.pendingRequests);
+                    if (data.authorizedDevices) setAuthorizedDevices(data.authorizedDevices);
 
-                    if (data.config && data.config.refreshToken && data.config.refreshToken !== dbxConfig.refreshToken) {
-                        const newSharedConfig = { ...dbxConfig, ...data.config };
-                        setDbxConfig(newSharedConfig);
-                        localStorage.setItem('tdbx_config', JSON.stringify(newSharedConfig));
+                    if (data.config && data.config.refreshToken) {
+                        if (data.config.refreshToken && data.config.refreshToken !== dbxConfig.refreshToken) {
+                            const newSharedConfig = { ...dbxConfig, ...data.config };
+                            setDbxConfig(newSharedConfig);
+                            localStorage.setItem('tdbx_config', JSON.stringify(newSharedConfig));
+                            if (!silent) console.log("Config OAuth mise à jour.");
+                        }
                     }
                     if (!silent) { setSyncLog("✅ Données à jour."); setSyncStatus('success'); }
                 } catch (e) {
-                     if (e.message === "EXPIRED_TOKEN_ALERT") { if (!silent) { setSyncLog("⚠️ Token expiré."); setSyncStatus('error'); if(users.length <= 2) setShowConfigModal(true); } } 
-                     else { if (!silent) { setSyncLog("⚠️ Erreur Sync : " + e.message); setSyncStatus('error'); } }
+                    if (e.message === "EXPIRED_TOKEN_ALERT") {
+                        if (!silent) { 
+                            setSyncLog("⚠️ Token expiré.");
+                            setSyncStatus('error');
+                            if(users.length <= 2) setShowConfigModal(true);
+                        }
+                    } else {
+                        if (!silent) { setSyncLog("⚠️ Erreur Sync : " + e.message); setSyncStatus('error'); }
+                    }
                 }
             };
 
-            // --- SECURITY ACTIONS ---
-            const requestDeviceAccess = async () => {
-                if(!loginForm.username) return alert("Entrez votre identifiant pour que l'admin sache qui vous êtes.");
-                setSyncStatus('working');
-                const myId = getDeviceId();
-                const myRequest = { id: myId, name: `${loginForm.username} (${getDeviceName()})`, date: new Date().toLocaleString() };
-                const newPending = [...pendingDevices, myRequest];
-                setPendingDevices(newPending);
-                try {
-                    await saveToCloud(null, null, null, null, null, null, newPending);
-                    setDeviceStatus('pending');
-                    alert("Demande envoyée à l'administrateur !");
-                } catch(e) { alert("Erreur d'envoi : " + e.message); }
-            };
-
-            const approveDevice = async (device) => {
-                if(!confirm(`Autoriser ${device.name} ?`)) return;
-                const newAuth = [...authorizedDevices, device.id];
-                const newPending = pendingDevices.filter(d => d.id !== device.id);
-                setAuthorizedDevices(newAuth);
-                setPendingDevices(newPending);
-                await saveToCloud(null, null, null, null, null, newAuth, newPending);
-            };
-
-            const rejectDevice = async (device) => {
-                if(!confirm(`Refuser ${device.name} ?`)) return;
-                const newPending = pendingDevices.filter(d => d.id !== device.id);
-                setPendingDevices(newPending);
-                await saveToCloud(null, null, null, null, null, null, newPending);
-            };
-
-            // --- APP RESET (FIX FOR MOBILE) ---
-            const handleResetApp = () => {
-                if(confirm("Êtes-vous sûr ? Cela effacera la mémoire locale pour repartir de zéro. Utile en cas de blocage.")) {
-                    localStorage.removeItem('tdbx_config');
-                    localStorage.removeItem('tdbx_users');
-                    localStorage.removeItem('tdbx_tarifs');
-                    localStorage.removeItem('tdbx_fiches');
-                    localStorage.removeItem('tdbx_history');
-                    localStorage.removeItem('tdbx_meta');
-                    // We don't remove device_id to keep security context
-                    window.location.reload();
+            // --- CALCULATOR LOGIC ---
+            const openCalculator = (product, prices) => {
+                let base = 0;
+                let label = '';
+                // Priority: T4 > TTC > HT
+                if (prices.t4) { 
+                    base = parseFloat(prices.t4); 
+                    label = 'Prix T4'; 
+                } else if (prices.ttc) { 
+                    base = parseFloat(prices.ttc); 
+                    label = 'Prix TTC'; 
+                } else { 
+                    base = parseFloat(prices.ht); 
+                    label = 'Prix HT (Exo)'; 
                 }
+                
+                setCalcState({ show: true, product, basePrice: base, baseLabel: label });
+                setExtraDiscount('');
             };
 
-            // --- LOGIN ---
-            const handleLogin = (e) => {
+            // --- LOGIN & ACTIONS ---
+            const handleLogin = async (e) => {
                 e.preventDefault();
+                setSyncStatus('working');
+                await loadCloudDatabase(true);
+                setSyncStatus('idle');
+
                 const user = users.find(u => u.id === loginForm.username && u.pass === loginForm.password);
                 if (user) {
-                    // SECURITY CHECK
-                    // If KHALID (SUPER ADMIN) -> BYPASS DEVICE CHECK
-                    // If allowed OR if admin and list empty (bootstrap)
-                    if (user.id === 'KHALID' || deviceStatus === 'allowed' || (user.role === 'admin' && authorizedDevices.length === 0)) {
+                    // SUPER ADMIN & ADMINS BYPASS DEVICE CHECK
+                    if (user.role === 'admin' || user.id === 'SUPERADMIN') {
                         setCurrentUser(user);
                         setLoginError('');
                         setView('dashboard');
-                        
-                        // Auto-add admin to authorized if list was empty
-                        if(user.role === 'admin' && authorizedDevices.length === 0) {
-                            const newAuth = [getDeviceId()];
+                        const randomQuote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+                        setCurrentQuote(randomQuote);
+                        setShowQuoteModal(true);
+                        // Auto-authorize admin device if not present
+                        if (!authorizedDevices.includes(deviceId)) {
+                            const newAuth = [...authorizedDevices, deviceId];
                             setAuthorizedDevices(newAuth);
-                            saveToCloud(null, null, null, null, null, newAuth, null);
+                            saveToCloud(null,null,null,null,null,null, newAuth);
                         }
+                        if (!dbxConfig.token && !dbxConfig.refreshToken && !HARDCODED_DBX_TOKEN) setShowConfigModal(true);
+                        return;
+                    }
 
+                    // VIEWER SECURITY CHECK
+                    if (authorizedDevices.includes(deviceId)) {
+                        setCurrentUser(user);
+                        setLoginError('');
+                        setView('dashboard');
                         const randomQuote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
                         setCurrentQuote(randomQuote);
                         setShowQuoteModal(true);
                     } else {
-                        // User valid but device invalid
-                        setLoginError("Cet appareil n'est pas autorisé.");
+                        // Check if request already pending
+                        const existingReq = pendingRequests.find(r => r.deviceId === deviceId);
+                        if (!existingReq) {
+                            const newReq = { deviceId, user: user.name, login: user.id, date: new Date().toLocaleString(), userAgent: navigator.userAgent };
+                            const newPending = [...pendingRequests, newReq];
+                            setPendingRequests(newPending);
+                            // We need to save this to cloud so admin sees it
+                            await saveToCloud(null, null, null, null, null, newPending, null);
+                        }
+                        setView('pending_approval');
                     }
-                } else { 
-                    // Aide au diagnostic pour l'utilisateur
-                    if (users.length === 2 && users[0].id === 'admin') {
-                        setLoginError('Identifiants incorrects. (Mode Local : essayez admin/admin)');
-                    } else {
-                        setLoginError('Identifiants incorrects'); 
-                    }
-                }
+                } else { setLoginError('Identifiants incorrects'); }
             };
-            
-            // ... (Rest of logic: handleLogout, openFile, openCalculator, PDF logic, Admin logic same as before) ...
-            const handleLogout = () => { setCurrentUser(null); setView('login'); setLoginForm({ username: '', password: '' }); setSearchQuery(''); setActiveTab('search'); };
-            const closeViewer = () => { if(viewingFile?.url) URL.revokeObjectURL(viewingFile.url); setViewingFile(null); setPdfState({ pdfDoc: null, pageNum: 1, numPages: 0, scale: 1.0 }); };
+
+            const handleLogout = () => {
+                setCurrentUser(null);
+                setView('login');
+                setLoginForm({ username: '', password: '' });
+                setSearchQuery('');
+                setActiveTab('search');
+            };
+
+            // ... (openFile, renderPage, etc. kept same)
+            const openFile = async (path, name) => {
+                setIsFileLoading(true);
+                setViewingFile(null);
+                setPdfState({ pdfDoc: null, pageNum: 1, numPages: 0, scale: 1.0 });
+                try {
+                    const rawBlob = await dbxDownloadFile(dbxConfig, setDbxConfig, path);
+                    const safeName = name || "Document";
+                    const pathIsPdf = path && path.toLowerCase().endsWith('.pdf');
+                    const nameIsPdf = safeName.toLowerCase().endsWith('.pdf');
+                    const isPdf = pathIsPdf || nameIsPdf;
+                    const typedBlob = new Blob([rawBlob], { type: isPdf ? 'application/pdf' : rawBlob.type });
+                    const url = URL.createObjectURL(typedBlob);
+                    setViewingFile({ url, name: safeName, type: isPdf ? 'pdf' : 'image' });
+                    if (isPdf) {
+                        try {
+                            const loadingTask = pdfjsLib.getDocument(url);
+                            const loadedPdf = await loadingTask.promise;
+                            setPdfState(prev => ({ ...prev, pdfDoc: loadedPdf, numPages: loadedPdf.numPages, pageNum: 1 }));
+                        } catch(pdfErr) { showToast("Erreur lecture PDF interne.", 'error'); }
+                    }
+                } catch(e) { showToast("Erreur ouverture : " + e.message, 'error'); } finally { setIsFileLoading(false); }
+            };
+
+            useEffect(() => {
+                const renderPage = async () => {
+                    if (!viewingFile || viewingFile.type !== 'pdf' || !pdfState.pdfDoc || !canvasRef.current) return;
+                    try {
+                        const page = await pdfState.pdfDoc.getPage(pdfState.pageNum);
+                        const viewport = page.getViewport({ scale: pdfState.scale });
+                        const canvas = canvasRef.current;
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        await page.render({ canvasContext: context, viewport }).promise;
+                    } catch (e) { }
+                };
+                renderPage();
+            }, [pdfState.pdfDoc, pdfState.pageNum, pdfState.scale, viewingFile]);
+
             const changePage = (offset) => setPdfState(prev => ({ ...prev, pageNum: Math.min(Math.max(1, prev.pageNum + offset), prev.numPages) }));
             const zoomPdf = (delta) => setPdfState(prev => ({ ...prev, scale: Math.max(0.5, prev.scale + delta) }));
-            const openCalculator = (product, prices) => { let base = 0; let label = ''; if (prices.t4) { base = parseFloat(prices.t4); label = 'Prix T4'; } else if (prices.ttc) { base = parseFloat(prices.ttc); label = 'Prix TTC'; } else { base = parseFloat(prices.ht); label = 'Prix HT (Exo)'; } setCalcState({ show: true, product, basePrice: base, baseLabel: label }); setExtraDiscount(''); };
-            const analyzePDF = async (blob, filename) => { try { const arrayBuffer = await blob.arrayBuffer(); const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise; let allProducts = []; let extractedDate = "Non daté"; const filenameDate = extractDateFromFilename(filename); const maxPages = Math.min(pdf.numPages, 10); for (let i = 1; i <= maxPages; i++) { const page = await pdf.getPage(i); const viewport = page.getViewport({ scale: 1.5 }); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); canvas.height = viewport.height; canvas.width = viewport.width; await page.render({ canvasContext: ctx, viewport }).promise; const base64Img = canvas.toDataURL('image/png').split(',')[1]; let prompt = i === 1 ? `Analyse page ${i}. Cherche date (format JJ/MM/AAAA) sinon "${filenameDate}". IMPORTANT: 1. Si un produit a un astérisque (*) avant ou après son nom, GARDE-LE dans le champ "name" (ex: "Produit *"). 2. PRIX: Le format est '1.234,56' (Europe) où le point (.) sépare les milliers et la virgule (,) est la décimale. CONVERTIS les prix en nombre standard (ex: 1234.56), SANS séparateur de milliers, et AVEC point pour décimale. 3. Extrais le conditionnement (ex: 25Kg, 5L, Sac, Pot) dans un champ séparé 'packaging'. JSON: { "date_tarif": "...", "products": [ {"name": "...", "price": "...", "unit": "...", "packaging": "..."} ] }` : `Analyse page ${i}. IMPORTANT: 1. Astérisque (*) dans "name". 2. PRIX: Convertis '1.234,56' en '1234.56'. 3. Extrais le conditionnement dans 'packaging'. JSON produits uniquement: { "products": [ {"name": "...", "price": "...", "unit": "...", "packaging": "..."} ] }`; if (i > 1) await delay(1000); try { const result = await callIA({ contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/png", data: base64Img } } ] }], generationConfig: { responseMimeType: "application/json" } }, dbxConfig.geminiKey); const pageData = JSON.parse(extractJSON(result.candidates[0].content.parts[0].text)); if (i === 1 && pageData.date_tarif) extractedDate = pageData.date_tarif; if (pageData.products) allProducts = [...allProducts, ...pageData.products]; } catch (pageErr) { } } return { date_tarif: extractedDate, products: allProducts }; } catch (e) { return { date_tarif: extractDateFromFilename(filename) || "Erreur", products: [] }; } };
-            const handleManualTarifUpload = async (e) => { e.preventDefault(); const file = adminFileInputRef.current?.files[0]; if (!file) return alert("Veuillez sélectionner un fichier PDF."); if (!dbxConfig.geminiKey) return alert("Clé API Gemini manquante."); setSyncStatus('working'); setSyncLog("Traitement manuel..."); setShowAdminUploadModal(false); try { const targetPath = `${dbxConfig.pathTarifs || '/Tarifs'}/${file.name}`; const uploadMeta = await dbxUploadFile(dbxConfig, setDbxConfig, targetPath, file); const analysis = await analyzePDF(file, file.name); let newTarifs = [...tarifs]; let report = null; if (adminUploadMode === 'update' && targetTarifId) { const oldTarif = tarifs.find(t => t.id === targetTarifId); if (oldTarif && oldTarif.products) { report = generateFluctuationReport(oldTarif.products, analysis.products); } newTarifs = newTarifs.filter(t => t.id !== targetTarifId); } else { report = generateFluctuationReport([], analysis.products); } const docEntry = { id: uploadMeta.id, name: uploadMeta.name, path: uploadMeta.path_lower, server_modified: uploadMeta.server_modified, index_date: new Date().toLocaleString(), date_tarif: analysis.date_tarif, products: analysis.products, t4_percentage: parseFloat(t4Value) || 0, report: report }; newTarifs.push(docEntry); setTarifs(newTarifs); const newHistoryEntry = { date: new Date().toLocaleString(), user: currentUser.name, action: adminUploadMode === 'new' ? `Ajout: ${file.name} (T4: ${t4Value}%)` : `MAJ: ${file.name}` }; const updatedHistory = [newHistoryEntry, ...dbHistory].slice(0, 10); setDbHistory(updatedHistory); await saveToCloud(newTarifs, fiches, updatedHistory, users); setSyncLog(`✅ ${file.name} traité (T4: ${t4Value}%).`); setSyncStatus('success'); } catch (err) { setSyncLog(`❌ Erreur: ${err.message}`); setSyncStatus('error'); } finally { if (adminFileInputRef.current) adminFileInputRef.current.value = ''; } };
-            const handleSyncFiches = async () => { setSyncStatus('working'); setSyncLog("Synchronisation des Fiches Techniques..."); try { if (dbxConfig.pathFT) { const listFT = await dbxListFolderFiches(dbxConfig, setDbxConfig); const newFiches = listFT.entries.filter(e => e['.tag'] === 'file').map(f => ({ id: f.id, name: f.name, path: f.path_lower, type: 'ft', server_modified: f.server_modified, index_date: new Date().toLocaleString() })); setFiches(newFiches); const newHistoryEntry = { date: new Date().toLocaleString(), user: currentUser.name, action: "Sync Fiches Techniques" }; const updatedHistory = [newHistoryEntry, ...dbHistory].slice(0, 10); setDbHistory(updatedHistory); await saveToCloud(tarifs, newFiches, updatedHistory, users); setSyncLog(`✅ Sync terminée : ${newFiches.length} fiches.`); setSyncStatus('success'); } else { throw new Error("Chemin des fiches non configuré."); } } catch(e) { setSyncLog("Erreur Sync Fiches: " + e.message); setSyncStatus('error'); } };
-            const handleDeleteAllTarifs = async () => { if(!confirm("ATTENTION : Cela va supprimer TOUS les tarifs. Continuer ?")) return; setSyncStatus('working'); try { const newHistoryEntry = { date: new Date().toLocaleString(), user: currentUser.name, action: "Suppression Totale des Tarifs" }; const updatedHistory = [newHistoryEntry, ...dbHistory].slice(0, 10); setDbHistory(updatedHistory); setTarifs([]); await saveToCloud([], fiches, updatedHistory, users); setSyncLog("✅ Tous les tarifs supprimés."); setSyncStatus('success'); } catch(e) { setSyncLog("❌ Erreur suppression : " + e.message); setSyncStatus('error'); loadCloudDatabase(true); } };
-            const handleDeleteEntry = async (type, id, name) => { if(!confirm(`Supprimer "${name}" ?`)) return; setSyncStatus('working'); const prevTarifs = [...tarifs]; const prevFiches = [...fiches]; let newTarifs = type === 'tarif' ? tarifs.filter(t => t.id !== id) : tarifs; let newFiches = type === 'fiche' ? fiches.filter(f => f.id !== id) : fiches; setTarifs(newTarifs); setFiches(newFiches); try { const newHistoryEntry = { date: new Date().toLocaleString(), user: currentUser.name, action: `Suppression : ${name}` }; const updatedHistory = [newHistoryEntry, ...dbHistory].slice(0, 10); setDbHistory(updatedHistory); await saveToCloud(newTarifs, newFiches, updatedHistory, users); setSyncLog(`✅ "${name}" supprimé.`); setSyncStatus('success'); } catch(e) { setSyncLog("Err delete: " + e.message); setSyncStatus('error'); alert("Echec suppression."); setTarifs(prevTarifs); setFiches(prevFiches); } };
-            const handleUserSubmit = async (e) => { e.preventDefault(); const newUser = { name: userFormData.name, id: userFormData.login, pass: userFormData.pass, role: userFormData.role, searchCount: 0 }; let updatedUsers = [...users]; if (editingUserIdx !== null) { updatedUsers[editingUserIdx] = { ...updatedUsers[editingUserIdx], ...newUser }; setEditingUserIdx(null); } else { if(users.find(u => u.id === newUser.id)) return alert("ID existant"); updatedUsers.push(newUser); if (newUser.role === 'admin') updatedUsers = updatedUsers.filter(u => !(u.id === 'admin' && u.pass === 'admin')); } setUsers(updatedUsers); setUserFormData({ name: '', login: '', pass: '', role: 'viewer' }); try { await saveToCloud(null, null, null, updatedUsers); alert("Enregistré !"); } catch(err) { alert("Erreur sync : " + err.message); } };
-            const handleManualCloudSave = async () => { setSyncStatus('working'); setSyncLog("Sauvegarde Cloud..."); try { await saveToCloud(); setSyncLog("✅ Sauvegardé."); setSyncStatus('success'); alert("Publié !"); } catch (e) { setSyncLog("❌ Erreur : " + e.message); setSyncStatus('error'); alert("Erreur : " + e.message); } };
-            const handleLocalExport = () => { const dataToExport = { exportDate: new Date().toLocaleString(), history: dbHistory, tarifs: tarifs, fiches: fiches, users: users }; const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `backup_tarifiers_dbx.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); };
-            const searchResults = useMemo(() => { if (!searchQuery || searchQuery.length < 2) return { products: [], fiches: [] }; const q = searchQuery.toLowerCase(); const foundProducts = []; (tarifs || []).forEach(t => { if (t.products) t.products.forEach(p => { if (p.name?.toLowerCase().includes(q)) foundProducts.push({ ...p, source: t.name, date_tarif: t.date_tarif, path: t.path, type: 'prod', t4_percentage: t.t4_percentage || 0, report: t.report }); }); }); const foundFiches = (fiches || []).filter(f => f.name.toLowerCase().includes(q)); return { products: foundProducts, fiches: foundFiches }; }, [searchQuery, tarifs, fiches]);
+            
+            const closeViewer = () => {
+                if(viewingFile?.url) URL.revokeObjectURL(viewingFile.url);
+                setViewingFile(null);
+                setPdfState({ pdfDoc: null, pageNum: 1, numPages: 0, scale: 1.0 });
+            };
 
+            const handleUploadFiche = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                setIsUploading(true);
+                try {
+                    const targetPath = `${dbxConfig.pathFT || '/Fiches'}/${file.name}`;
+                    await dbxUploadFile(dbxConfig, setDbxConfig, targetPath, file);
+                    const newFiche = { id: 'local_' + Date.now(), name: file.name, path: targetPath, type: 'ft', server_modified: new Date().toISOString(), index_date: new Date().toLocaleString() };
+                    const newFichesList = [newFiche, ...fiches];
+                    setFiches(newFichesList);
+                    saveToCloud(null, newFichesList, null, null);
+                    showToast(`Fiche ajoutée et publiée !`, 'success');
+                } catch (err) { showToast("Erreur : " + err.message, 'error'); } finally { setIsUploading(false); if(uploadInputRef.current) uploadInputRef.current.value = ''; }
+            };
+
+            // ... (Admin Logic kept same)
+            const analyzePDF = async (blob, filename) => {
+                try {
+                    const arrayBuffer = await blob.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    let allProducts = [];
+                    let extractedDate = "Non daté";
+                    const filenameDate = extractDateFromFilename(filename);
+                    const maxPages = Math.min(pdf.numPages, 10); 
+                    for (let i = 1; i <= maxPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        await page.render({ canvasContext: ctx, viewport }).promise;
+                        const base64Img = canvas.toDataURL('image/png').split(',')[1];
+                        const instructionPrix = "ATTENTION : Les prix sur le document utilisent le format EUROPEEN (ex: 1.000,00 = mille). Le POINT (.) est un séparateur de milliers et la VIRGULE (,) est la décimale. DANS LE JSON, convertis ces prix en NOMBRE FLOTTANT STANDARD (ex: 1000.00, sans séparateur de milliers).";
+                        let prompt = i === 1 
+                            ? `Analyse page ${i}. Cherche date (format JJ/MM/AAAA) sinon "${filenameDate}". ${instructionPrix} IMPORTANT: 1. Si un produit a un astérisque (*) avant ou après son nom, GARDE-LE dans le champ "name". 2. CRITIQUE : Le conditionnement (ex: 25Kg, 5L, Sac, Pot, Bidon, 1L) DOIT être extrait dans le champ 'packaging'. Si un produit existe en plusieurs tailles, génère plusieurs entrées distinctes. JSON: { "date_tarif": "...", "products": [ {"name": "...", "price": "...", "unit": "...", "packaging": "..."} ] }` 
+                            : `Analyse page ${i}. ${instructionPrix} IMPORTANT: 1. Astérisque (*) dans "name". 2. CRITIQUE : Extrais le conditionnement (ex: 25Kg, 5L, Sac, Pot) dans le champ 'packaging'. C'est ce qui différencie les produits. JSON produits uniquement: { "products": [ {"name": "...", "price": "...", "unit": "...", "packaging": "..."} ] }`;
+                        if (i > 1) await delay(1000);
+                        try {
+                            const result = await callIA({ contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/png", data: base64Img } } ] }], generationConfig: { responseMimeType: "application/json" } }, dbxConfig.geminiKey);
+                            const pageData = JSON.parse(extractJSON(result.candidates[0].content.parts[0].text));
+                            if (i === 1 && pageData.date_tarif) extractedDate = pageData.date_tarif;
+                            if (pageData.products) allProducts = [...allProducts, ...pageData.products];
+                        } catch (pageErr) { }
+                    }
+                    return { date_tarif: extractedDate, products: allProducts };
+                } catch (e) { return { date_tarif: extractDateFromFilename(filename) || "Erreur", products: [] }; }
+            };
+
+            const handleManualTarifUpload = async (e) => {
+                e.preventDefault();
+                const file = adminFileInputRef.current?.files[0];
+                if (!file) return showToast("Veuillez sélectionner un fichier PDF.", 'warning');
+                if (!dbxConfig.geminiKey) return showToast("Clé API Gemini manquante.", 'error');
+                setSyncStatus('working');
+                setSyncLog("Traitement manuel...");
+                setShowAdminUploadModal(false);
+                try {
+                    const targetPath = `${dbxConfig.pathTarifs || '/Tarifs'}/${file.name}`;
+                    const uploadMeta = await dbxUploadFile(dbxConfig, setDbxConfig, targetPath, file);
+                    const analysis = await analyzePDF(file, file.name);
+                    let newTarifs = [...tarifs];
+                    let report = null;
+                    if (adminUploadMode === 'update' && targetTarifId) {
+                        const oldTarif = tarifs.find(t => t.id === targetTarifId);
+                        if (oldTarif && oldTarif.products) {
+                            report = generateFluctuationReport(oldTarif.products, analysis.products);
+                        }
+                        newTarifs = newTarifs.filter(t => t.id !== targetTarifId);
+                    } else {
+                         report = generateFluctuationReport([], analysis.products);
+                    }
+                    const docEntry = { 
+                        id: uploadMeta.id, name: uploadMeta.name, path: uploadMeta.path_lower, 
+                        server_modified: uploadMeta.server_modified, index_date: new Date().toLocaleString(), 
+                        date_tarif: analysis.date_tarif, products: analysis.products, t4_percentage: parseFloat(t4Value) || 0,
+                        report: report 
+                    };
+                    newTarifs.push(docEntry);
+                    setTarifs(newTarifs);
+                    const newHistoryEntry = { date: new Date().toLocaleString(), user: currentUser.name, action: adminUploadMode === 'new' ? `Ajout: ${file.name} (T4: ${t4Value}%)` : `MAJ: ${file.name}` };
+                    const updatedHistory = [newHistoryEntry, ...dbHistory].slice(0, 10);
+                    setDbHistory(updatedHistory);
+                    await saveToCloud(newTarifs, fiches, updatedHistory, users);
+                    setSyncLog(`✅ ${file.name} traité (T4: ${t4Value}%).`);
+                    setSyncStatus('success');
+                } catch (err) { setSyncLog(`❌ Erreur: ${err.message}`); setSyncStatus('error'); } 
+                finally { if (adminFileInputRef.current) adminFileInputRef.current.value = ''; }
+            };
+
+            const handleSyncFiches = async () => {
+                setSyncStatus('working');
+                setSyncLog("Synchronisation des Fiches Techniques...");
+                try {
+                    let currentFiches = [...fiches]; 
+                    if (dbxConfig.pathFT) {
+                        const listFT = await dbxListFolderFiches(dbxConfig, setDbxConfig);
+                        const newFiches = listFT.entries.filter(e => e['.tag'] === 'file').map(f => ({ 
+                            id: f.id, name: f.name, path: f.path_lower, type: 'ft', server_modified: f.server_modified, index_date: new Date().toLocaleString() 
+                        }));
+                        setFiches(newFiches);
+                        const newHistoryEntry = { date: new Date().toLocaleString(), user: currentUser.name, action: "Sync Fiches Techniques" };
+                        const updatedHistory = [newHistoryEntry, ...dbHistory].slice(0, 10);
+                        setDbHistory(updatedHistory);
+                        await saveToCloud(tarifs, newFiches, updatedHistory, users);
+                        setSyncLog(`✅ Sync terminée : ${newFiches.length} fiches.`);
+                        setSyncStatus('success');
+                    } else { throw new Error("Chemin des fiches non configuré."); }
+                } catch(e) { setSyncLog("Erreur Sync Fiches: " + e.message); setSyncStatus('error'); }
+            };
+
+            const handleDeleteAllTarifs = () => {
+                askConfirm(
+                    "Suppression Totale",
+                    "ATTENTION : Cela va supprimer TOUS les tarifs. Continuer ?",
+                    async () => {
+                        setSyncStatus('working');
+                        try {
+                            const newHistoryEntry = { date: new Date().toLocaleString(), user: currentUser.name, action: "Suppression Totale des Tarifs" };
+                            const updatedHistory = [newHistoryEntry, ...dbHistory].slice(0, 10);
+                            setDbHistory(updatedHistory);
+                            setTarifs([]);
+                            await saveToCloud([], fiches, updatedHistory, users);
+                            setSyncLog("✅ Tous les tarifs supprimés.");
+                            setSyncStatus('success');
+                        } catch(e) { setSyncLog("❌ Erreur suppression : " + e.message); setSyncStatus('error'); loadCloudDatabase(true); }
+                    }
+                );
+            };
+
+            const handleDeleteEntry = (type, id, name) => {
+                askConfirm(
+                    "Confirmation",
+                    `Supprimer "${name}" ?`,
+                    async () => {
+                        setSyncStatus('working');
+                        const prevTarifs = [...tarifs];
+                        const prevFiches = [...fiches];
+                        let newTarifs = type === 'tarif' ? tarifs.filter(t => t.id !== id) : tarifs;
+                        let newFiches = type === 'fiche' ? fiches.filter(f => f.id !== id) : fiches;
+                        setTarifs(newTarifs); setFiches(newFiches);
+                        try {
+                            const newHistoryEntry = { date: new Date().toLocaleString(), user: currentUser.name, action: `Suppression : ${name}` };
+                            const updatedHistory = [newHistoryEntry, ...dbHistory].slice(0, 10);
+                            setDbHistory(updatedHistory);
+                            await saveToCloud(newTarifs, newFiches, updatedHistory, users);
+                            setSyncLog(`✅ "${name}" supprimé.`);
+                            setSyncStatus('success');
+                        } catch(e) { 
+                            setSyncLog("Err delete: " + e.message); 
+                            setSyncStatus('error'); 
+                            showToast("Echec suppression.", 'error'); 
+                            setTarifs(prevTarifs); 
+                            setFiches(prevFiches); 
+                        }
+                    }
+                );
+            };
+
+            const handleUserSubmit = async (e) => {
+                e.preventDefault();
+                const newUser = { name: userFormData.name, id: userFormData.login, pass: userFormData.pass, role: userFormData.role, searchCount: 0 };
+                let updatedUsers = [...users];
+                if (editingUserIdx !== null) {
+                    updatedUsers[editingUserIdx] = { ...updatedUsers[editingUserIdx], ...newUser };
+                    setEditingUserIdx(null);
+                } else {
+                    if(users.find(u => u.id === newUser.id)) return showToast("ID existant", 'warning');
+                    updatedUsers.push(newUser);
+                    if (newUser.role === 'admin') updatedUsers = updatedUsers.filter(u => !(u.id === 'admin' && u.pass === 'admin'));
+                }
+                setUsers(updatedUsers);
+                setUserFormData({ name: '', login: '', pass: '', role: 'viewer' });
+                try { await saveToCloud(null, null, null, updatedUsers); showToast("Enregistré !", 'success'); } catch(err) { showToast("Erreur sync : " + err.message, 'error'); }
+            };
+
+            const handleManualCloudSave = async () => {
+                setSyncStatus('working');
+                setSyncLog("Sauvegarde Cloud...");
+                try { await saveToCloud(); setSyncLog("✅ Sauvegardé."); setSyncStatus('success'); showToast("Publié !", 'success'); } 
+                catch (e) { setSyncLog("❌ Erreur : " + e.message); setSyncStatus('error'); showToast("Erreur : " + e.message, 'error'); }
+            };
+            
+            const handleLocalExport = () => {
+                const dataToExport = { exportDate: new Date().toLocaleString(), history: dbHistory, tarifs: tarifs, fiches: fiches, users: users };
+                const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `backup_tarifiers_dbx.json`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            };
+
+            const handleApproveDevice = async (req) => {
+                setSyncStatus('working');
+                const newAuthorized = [...authorizedDevices, req.deviceId];
+                const newPending = pendingRequests.filter(r => r.deviceId !== req.deviceId);
+                setAuthorizedDevices(newAuthorized);
+                setPendingRequests(newPending);
+                try {
+                    await saveToCloud(null, null, null, null, null, newPending, newAuthorized);
+                    showToast("Appareil autorisé !", "success");
+                } catch(e) { showToast("Erreur: " + e.message, "error"); }
+                setSyncStatus('idle');
+            };
+
+            const handleRejectDevice = async (req) => {
+                if(!confirm("Rejeter cette demande ?")) return;
+                const newPending = pendingRequests.filter(r => r.deviceId !== req.deviceId);
+                setPendingRequests(newPending);
+                await saveToCloud(null, null, null, null, null, newPending, null);
+                showToast("Demande rejetée", "info");
+            };
+
+            const handleRevokeDevice = async (devId) => {
+                if(!confirm("Bloquer cet appareil ?")) return;
+                const newAuthorized = authorizedDevices.filter(d => d !== devId);
+                setAuthorizedDevices(newAuthorized);
+                await saveToCloud(null, null, null, null, null, null, newAuthorized);
+                showToast("Appareil bloqué", "warning");
+            };
+
+            const searchResults = useMemo(() => {
+                if (!searchQuery || searchQuery.length < 2) return { products: [], fiches: [] };
+                const q = searchQuery.toLowerCase();
+                const foundProducts = [];
+                (tarifs || []).forEach(t => {
+                    if (t.products) t.products.forEach(p => {
+                        if (p.name?.toLowerCase().includes(q)) foundProducts.push({ 
+                            ...p, source: t.name, date_tarif: t.date_tarif, path: t.path, type: 'prod', t4_percentage: t.t4_percentage || 0,
+                            report: t.report
+                        });
+                    });
+                });
+                const foundFiches = (fiches || []).filter(f => f.name.toLowerCase().includes(q));
+                return { products: foundProducts, fiches: foundFiches };
+            }, [searchQuery, tarifs, fiches]);
+
+            // --- VIEW: PENDING APPROVAL ---
+            if (view === 'pending_approval') return (
+                <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+                    <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl text-center animate-fade">
+                        <div className="w-20 h-20 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Icon name="ShieldAlert" size={40}/>
+                        </div>
+                        <h2 className="text-2xl font-bold text-slate-800 mb-2">Appareil non autorisé</h2>
+                        <p className="text-slate-500 mb-6">Votre demande d'accès pour cet appareil a été envoyée à l'administrateur.</p>
+                        <div className="bg-slate-50 p-4 rounded-xl mb-6 text-left border border-slate-200">
+                            <div className="text-xs text-slate-400 font-bold uppercase mb-1">ID Appareil</div>
+                            <div className="font-mono text-sm bg-white p-2 rounded border border-slate-200 break-all">{deviceId}</div>
+                        </div>
+                        <button onClick={() => setView('login')} className="text-blue-600 font-bold hover:underline">Retour à la connexion</button>
+                    </div>
+                </div>
+            );
+
+            // --- VIEW: LOGIN ---
             if (view === 'login') return (
                 <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-                    {showConfigModal && (<div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"><div className="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full animate-fade"><h2 className="text-xl font-bold mb-2">Configuration Initiale</h2><p className="text-slate-500 text-sm mb-6">Token manquant ou expiré.</p><input type="password" placeholder="Token Dropbox..." className="w-full p-3 border rounded-xl mb-4 text-sm font-mono outline-none focus:ring-2 focus:ring-blue-500" value={dbxConfig.token} onChange={e => setDbxConfig({...dbxConfig, token: e.target.value})} /><button onClick={() => { if(dbxConfig.token) { setShowConfigModal(false); loadCloudDatabase(); } }} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Valider</button></div></div>)}
+                    <div className="fixed top-4 right-4 z-[200] space-y-2">
+                        {toasts.map(t => (
+                            <div key={t.id} className={`p-4 rounded-xl shadow-lg text-sm font-bold animate-fade text-white flex items-center gap-2 ${t.type === 'error' ? 'bg-red-500' : t.type === 'success' ? 'bg-green-500' : 'bg-slate-800'}`}>
+                                <Icon name={t.type === 'error' ? 'AlertCircle' : t.type === 'success' ? 'Check' : 'Info'} size={16}/>
+                                {t.message}
+                            </div>
+                        ))}
+                    </div>
+
+                    {showConfigModal && (
+                        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full animate-fade">
+                                <h2 className="text-xl font-bold mb-2">Configuration Initiale</h2>
+                                <p className="text-slate-500 text-sm mb-6">Token manquant ou expiré.</p>
+                                <input type="password" placeholder="Token Dropbox..." className="w-full p-3 border rounded-xl mb-4 text-sm font-mono outline-none focus:ring-2 focus:ring-blue-500" value={dbxConfig.token} onChange={e => setDbxConfig({...dbxConfig, token: e.target.value})} />
+                                <button onClick={() => { if(dbxConfig.token) { setShowConfigModal(false); loadCloudDatabase(); } }} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Valider</button>
+                            </div>
+                        </div>
+                    )}
                     <div className="w-full max-w-md p-8 bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 animate-fade relative">
                         {syncStatus === 'working' && <div className="absolute top-4 right-4 flex items-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full animate-pulse"><Icon name="Loader2" size={14} className="animate-spin"/> Sync...</div>}
-                        <div className="text-center mb-8"><div className="inline-flex p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-200 mb-4"><Icon name="Database" size={32} className="text-white"/></div><h1 className="text-3xl font-black text-slate-800 mb-1">Tarifiers<span className="text-blue-600">DBX</span></h1><p className="text-slate-500 font-medium text-sm">Portail Unifié CMGP-CAS</p></div>
+                        <div className="text-center mb-8">
+                            <div className="inline-flex p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-200 mb-4"><Icon name="Database" size={32} className="text-white"/></div>
+                            <h1 className="text-3xl font-black text-slate-800 mb-1">Tarifiers<span className="text-blue-600">DBX</span></h1>
+                            <p className="text-slate-500 font-medium text-sm">Portail Unifié CMGP-CAS</p>
+                        </div>
                         <form onSubmit={handleLogin} className="space-y-4">
-                            {/* ERROR MESSAGE & DEVICE AUTH */}
-                            {loginError && (
-                                <div className="bg-red-50 text-red-500 p-3 rounded-xl text-sm text-center font-bold border border-red-100 flex flex-col gap-2">
-                                    <p>{loginError}</p>
-                                    {/* Show Request Button if login ok but device blocked */}
-                                    {deviceStatus === 'blocked' && loginForm.username && (
-                                        <button type="button" onClick={requestDeviceAccess} className="bg-red-600 text-white py-2 px-4 rounded-lg text-xs font-bold hover:bg-red-700 transition-colors">
-                                            Demander l'accès pour cet appareil
-                                        </button>
-                                    )}
-                                    {deviceStatus === 'pending' && <p className="text-xs text-orange-500 animate-pulse">Demande en attente de validation...</p>}
-                                </div>
-                            )}
-                            
+                            {syncStatus === 'error' && <div className="bg-red-50 text-red-500 p-3 rounded-xl text-xs text-center font-bold border border-red-100 flex flex-col items-center gap-1"><span>⚠️ {syncLog}</span><button type="button" onClick={() => setShowConfigModal(true)} className="underline text-red-700 hover:text-red-900 mt-1">Configurer le token</button></div>}
+                            {loginError && <div className="bg-red-50 text-red-500 p-3 rounded-xl text-sm text-center font-bold border border-red-100">{loginError}</div>}
                             <input className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-700" value={loginForm.username} onChange={e => setLoginForm({...loginForm, username: e.target.value})} placeholder="Identifiant" />
                             <input type="password" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-700" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="Mot de passe" />
                             <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 transition-all transform active:scale-95 mt-2">Se Connecter</button>
                         </form>
-                        <div className="mt-6 pt-4 border-t border-slate-200 text-center flex flex-col gap-2">
-                             <button type="button" onClick={() => loadCloudDatabase(false)} className="text-xs font-bold text-slate-400 hover:text-blue-600 flex items-center justify-center gap-2 w-full transition-colors"><Icon name="RefreshCw" size={12}/> Mettre à jour les accès (Cloud)</button>
-                             {/* BOUTON RESET (SECOURS MOBILE) */}
-                             <button type="button" onClick={handleResetApp} className="text-[10px] font-bold text-red-300 hover:text-red-500 flex items-center justify-center gap-1 w-full transition-colors"><Icon name="Trash" size={10}/> Réinitialiser l'App (Secours)</button>
-                        </div>
-                        <div className="text-[10px] text-center text-slate-400 mt-2">Source: {tarifs.length > 0 ? "Cloud ☁️" : "Défaut (Local) 💻"}</div>
+                        <div className="mt-6 pt-4 border-t border-slate-200 text-center"><button type="button" onClick={() => loadCloudDatabase(false)} className="text-xs font-bold text-slate-400 hover:text-blue-600 flex items-center justify-center gap-2 w-full transition-colors"><Icon name="RefreshCw" size={12}/> Mettre à jour les accès (Cloud)</button></div>
                         {!HARDCODED_DBX_TOKEN && <p className="text-xs text-center text-red-400 mt-4">⚠️ Token Dropbox manquant.</p>}
                     </div>
                 </div>
             );
 
+            // --- VIEW: DASHBOARD (APP) ---
             return (
                 <ErrorBoundary>
                     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans relative">
+                        <div className="fixed top-20 right-4 z-[200] space-y-2 pointer-events-none">
+                            {toasts.map(t => (
+                                <div key={t.id} className={`p-4 rounded-xl shadow-lg text-sm font-bold animate-fade text-white flex items-center gap-2 pointer-events-auto ${t.type === 'error' ? 'bg-red-500' : t.type === 'success' ? 'bg-green-500' : 'bg-slate-800'}`}>
+                                    <Icon name={t.type === 'error' ? 'AlertCircle' : t.type === 'success' ? 'Check' : 'Info'} size={16}/>
+                                    {t.message}
+                                </div>
+                            ))}
+                        </div>
+
+                        {confirmModal.show && (
+                             <div className="fixed inset-0 z-[150] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade">
+                                <div className="bg-white p-6 rounded-3xl shadow-2xl max-w-sm w-full text-center">
+                                    <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Icon name="HelpCircle" size={24}/>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-slate-800 mb-2">{confirmModal.title}</h3>
+                                    <p className="text-sm text-slate-500 mb-6">{confirmModal.message}</p>
+                                    <div className="flex gap-3">
+                                        <button onClick={() => setConfirmModal({...confirmModal, show: false})} className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors">Annuler</button>
+                                        <button onClick={handleConfirmYes} className="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors">Confirmer</button>
+                                    </div>
+                                </div>
+                             </div>
+                        )}
+
                         {isFileLoading && <div className="fixed inset-0 z-[110] bg-white/50 backdrop-blur-sm flex items-center justify-center animate-fade"><div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center border border-slate-100"><div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div><div className="font-bold text-slate-800">Chargement...</div></div></div>}
                         
-                        {/* CALCULATRICE MODAL */}
                         {calcState.show && (
                             <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade">
                                 <div className="bg-white p-6 rounded-3xl shadow-2xl max-w-sm w-full relative">
                                     <button onClick={() => setCalcState({ ...calcState, show: false })} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><Icon name="X"/></button>
                                     <h3 className="font-bold text-lg mb-1 flex items-center gap-2"><Icon name="Calculator" className="text-blue-600"/> Calculatrice</h3>
                                     <p className="text-xs text-slate-500 mb-6 truncate">{calcState.product.name}</p>
-                                    
                                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-4">
                                         <div className="flex justify-between text-sm mb-1">
                                             <span className="text-slate-500">Base ({calcState.baseLabel})</span>
@@ -721,7 +1089,6 @@
                                             </div>
                                         </div>
                                     </div>
-
                                     <div className="text-center">
                                         <div className="text-xs text-slate-400 font-bold uppercase mb-1">Prix Final</div>
                                         <div className="text-4xl font-black text-blue-600 tracking-tight">
@@ -732,37 +1099,30 @@
                             </div>
                         )}
 
-                        {/* REPORT VIEWER MODAL - MODERN DESIGN */}
                         {viewingReport && (
                             <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade">
                                 <div className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full relative flex flex-col max-h-[85vh] overflow-hidden">
-                                    {/* Header */}
                                     <div className="bg-slate-900 text-white p-6 relative">
                                         <button onClick={() => setViewingReport(null)} className="absolute top-6 right-6 text-slate-400 hover:text-white"><Icon name="X" size={24}/></button>
                                         <h3 className="font-black text-2xl mb-1 flex items-center gap-3"><Icon name="TrendingUp" className="text-blue-400"/> Rapport de Fluctuation</h3>
                                         <p className="text-sm text-slate-400 font-mono opacity-80">Mise à jour du : {viewingReport.date}</p>
                                     </div>
-
-                                    {/* Dashboard Summary */}
                                     <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100">
                                         <div className="bg-white p-4 text-center">
-                                            <div className="text-2xl font-black text-orange-600">{viewingReport.changed?.length || 0}</div>
+                                            <div className="text-2xl font-black text-orange-600">{viewingReport.changed.length}</div>
                                             <div className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Modifiés</div>
                                         </div>
                                         <div className="bg-white p-4 text-center">
-                                            <div className="text-2xl font-black text-green-600">{viewingReport.added?.length || 0}</div>
+                                            <div className="text-2xl font-black text-green-600">{viewingReport.added.length}</div>
                                             <div className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Ajoutés</div>
                                         </div>
                                         <div className="bg-white p-4 text-center">
-                                            <div className="text-2xl font-black text-red-600">{viewingReport.removed?.length || 0}</div>
+                                            <div className="text-2xl font-black text-red-600">{viewingReport.removed.length}</div>
                                             <div className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Retirés</div>
                                         </div>
                                     </div>
-                                    
-                                    {/* Content Scrollable */}
                                     <div className="flex-1 overflow-y-auto p-6 space-y-8 modern-scroll bg-slate-50">
-                                        {/* Modifiés */}
-                                        {viewingReport.changed?.length > 0 && (
+                                        {viewingReport.changed.length > 0 && (
                                             <div>
                                                 <h4 className="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-orange-500"></div> Prix Modifiés</h4>
                                                 <div className="grid grid-cols-1 gap-3">
@@ -787,9 +1147,7 @@
                                                 </div>
                                             </div>
                                         )}
-
-                                        {/* Ajoutés */}
-                                        {viewingReport.added?.length > 0 && (
+                                        {viewingReport.added.length > 0 && (
                                             <div>
                                                 <h4 className="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500"></div> Nouveaux Articles</h4>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -805,9 +1163,7 @@
                                                 </div>
                                             </div>
                                         )}
-
-                                        {/* Retirés */}
-                                        {viewingReport.removed?.length > 0 && (
+                                        {viewingReport.removed.length > 0 && (
                                             <div>
                                                 <h4 className="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div> Articles Retirés</h4>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 opacity-60">
@@ -823,8 +1179,7 @@
                                                 </div>
                                             </div>
                                         )}
-
-                                        {viewingReport.changed?.length === 0 && viewingReport.added?.length === 0 && viewingReport.removed?.length === 0 && (
+                                        {viewingReport.changed.length === 0 && viewingReport.added.length === 0 && viewingReport.removed.length === 0 && (
                                             <div className="text-center py-12">
                                                 <div className="inline-flex bg-slate-100 p-4 rounded-full text-slate-300 mb-3"><Icon name="CheckCircle" size={32}/></div>
                                                 <div className="text-slate-500 font-medium">Aucun changement détecté lors de cette mise à jour.</div>
@@ -835,27 +1190,48 @@
                             </div>
                         )}
 
-                        {viewingFile && (<div className="fixed inset-0 z-[100] bg-slate-900 flex flex-col animate-fade"><div className="flex items-center justify-between p-4 bg-slate-900 text-white border-b border-slate-700 shadow-xl z-20"><h3 className="font-bold truncate max-w-md flex items-center gap-2 text-sm md:text-base"><Icon name="FileText" size={18} className="text-blue-400"/> {viewingFile.name}</h3><div className="flex gap-2 items-center">{viewingFile.type === 'pdf' && pdfState.numPages > 1 && (<div className="hidden md:flex bg-slate-800 rounded-lg p-1 mr-2 items-center"><button onClick={() => changePage(-1)} className="p-1 hover:text-blue-400"><Icon name="ChevronLeft"/></button><span className="px-2 text-xs font-mono">{pdfState.pageNum} / {pdfState.numPages}</span><button onClick={() => changePage(1)} className="p-1 hover:text-blue-400"><Icon name="ChevronRight"/></button></div>)}{viewingFile.type === 'pdf' && (<div className="hidden md:flex bg-slate-800 rounded-lg p-1 mr-2"><button onClick={() => zoomPdf(-0.2)} className="p-1 hover:text-blue-400"><Icon name="Minus" size={16}/></button><button onClick={() => zoomPdf(0.2)} className="p-1 hover:text-blue-400"><Icon name="Plus" size={16}/></button></div>)}<a href={viewingFile.url} download={viewingFile.name} className="p-2 bg-slate-800 hover:bg-blue-600 rounded-lg text-slate-300 hover:text-white transition-colors" title="Sauvegarder"><Icon name="Download" size={18}/></a><button onClick={closeViewer} className="p-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition-colors" title="Fermer"><Icon name="X" size={18}/></button></div></div><div className="flex-1 relative bg-gray-800 overflow-auto flex justify-center p-4">{viewingFile.type === 'pdf' ? (<div className="relative shadow-2xl"><canvas ref={canvasRef} className="max-w-full h-auto bg-white"/>{pdfState.numPages > 1 && (<div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white px-4 py-2 rounded-full flex gap-4 items-center shadow-xl backdrop-blur-sm border border-slate-700"><button onClick={() => changePage(-1)}><Icon name="ChevronLeft"/></button><span className="text-xs font-bold">{pdfState.pageNum}/{pdfState.numPages}</span><button onClick={() => changePage(1)}><Icon name="ChevronRight"/></button></div>)}</div>) : (<img src={viewingFile.url} alt="Visuel" className="max-w-full max-h-full object-contain" />)}</div></div>)}
+                        {viewingFile && (
+                            <div className="fixed inset-0 z-[100] bg-slate-900 flex flex-col animate-fade">
+                                <div className="flex items-center justify-between p-4 bg-slate-900 text-white border-b border-slate-700 shadow-xl z-20">
+                                    <h3 className="font-bold truncate max-w-md flex items-center gap-2 text-sm md:text-base"><Icon name="FileText" size={18} className="text-blue-400"/> {viewingFile.name}</h3>
+                                    <div className="flex gap-2 items-center">
+                                        {viewingFile.type === 'pdf' && pdfState.numPages > 1 && (<div className="hidden md:flex bg-slate-800 rounded-lg p-1 mr-2 items-center"><button onClick={() => changePage(-1)} className="p-1 hover:text-blue-400"><Icon name="ChevronLeft"/></button><span className="px-2 text-xs font-mono">{pdfState.pageNum} / {pdfState.numPages}</span><button onClick={() => changePage(1)} className="p-1 hover:text-blue-400"><Icon name="ChevronRight"/></button></div>)}
+                                        {viewingFile.type === 'pdf' && (<div className="hidden md:flex bg-slate-800 rounded-lg p-1 mr-2"><button onClick={() => zoomPdf(-0.2)} className="p-1 hover:text-blue-400"><Icon name="Minus" size={16}/></button><button onClick={() => zoomPdf(0.2)} className="p-1 hover:text-blue-400"><Icon name="Plus" size={16}/></button></div>)}
+                                        <a href={viewingFile.url} download={viewingFile.name} className="p-2 bg-slate-800 hover:bg-blue-600 rounded-lg text-slate-300 hover:text-white transition-colors" title="Sauvegarder"><Icon name="Download" size={18}/></a>
+                                        <button onClick={closeViewer} className="p-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition-colors" title="Fermer"><Icon name="X" size={18}/></button>
+                                    </div>
+                                </div>
+                                <div className="flex-1 relative bg-gray-800 overflow-auto flex justify-center p-4">
+                                    {viewingFile.type === 'pdf' ? (<div className="relative shadow-2xl"><canvas ref={canvasRef} className="max-w-full h-auto bg-white"/>{pdfState.numPages > 1 && (<div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white px-4 py-2 rounded-full flex gap-4 items-center shadow-xl backdrop-blur-sm border border-slate-700"><button onClick={() => changePage(-1)}><Icon name="ChevronLeft"/></button><span className="text-xs font-bold">{pdfState.pageNum}/{pdfState.numPages}</span><button onClick={() => changePage(1)}><Icon name="ChevronRight"/></button></div>)}</div>) : (<img src={viewingFile.url} alt="Visuel" className="max-w-full max-h-full object-contain" />)}
+                                </div>
+                            </div>
+                        )}
+
                         {showQuoteModal && currentQuote && <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-6 animate-fade"><div className="max-w-2xl w-full text-center text-white"><div className="mb-8"><Icon name="Quote" size={64} className="mx-auto text-blue-400 opacity-50"/></div><h2 className="text-3xl md:text-5xl font-black mb-8 leading-tight">"{currentQuote.text}"</h2><p className="text-xl text-blue-200 font-medium mb-12">— {currentQuote.author}</p><button onClick={() => setShowQuoteModal(false)} className="bg-white text-slate-900 px-8 py-4 rounded-full font-bold text-lg hover:bg-blue-50 transition-transform hover:scale-105 shadow-xl">Accéder au Portail <Icon name="ArrowRight" className="inline ml-2"/></button></div></div>}
 
                         <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 h-16 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40">
                             <div className="flex items-center gap-3"><div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('search')}><div className="bg-blue-600 text-white p-1.5 rounded-lg"><Icon name="Database" size={20} /></div><span className="font-bold text-lg tracking-tight hidden md:inline">Tarifiers<span className="text-blue-600">DBX</span></span></div><button onClick={() => loadCloudDatabase()} className="p-2 bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 rounded-full transition-colors" title="Forcer la mise à jour"><Icon name="RefreshCw" size={16} className={syncStatus === 'working' ? 'animate-spin' : ''}/></button></div>
                             <div className="flex items-center gap-3">
-                                {currentUser.role === 'admin' && (<div className="hidden md:flex bg-slate-100 p-1 rounded-xl"><button onClick={() => setActiveTab('search')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'search' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Recherche</button><button onClick={() => setActiveTab('admin')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'admin' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Admin</button><button onClick={() => setActiveTab('users')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'users' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Users</button></div>)}
+                                {currentUser.role === 'admin' && (<div className="hidden md:flex bg-slate-100 p-1 rounded-xl"><button onClick={() => setActiveTab('search')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'search' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Recherche</button><button onClick={() => setActiveTab('admin')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'admin' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Admin</button><button onClick={() => setActiveTab('security')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${activeTab === 'security' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Sécurité {pendingRequests.length > 0 && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>}</button><button onClick={() => setActiveTab('users')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'users' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Users</button></div>)}
                                 <div className="h-8 w-px bg-slate-200 mx-1"></div><button onClick={handleLogout} className="flex items-center gap-2 text-slate-500 hover:text-red-600 transition-colors text-sm font-medium"><span className="hidden md:inline">{currentUser.name}</span><Icon name="LogOut" size={18} /></button>
                             </div>
                         </nav>
 
                         <main className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-8">
+                            {/* SEARCH TAB */}
                             {activeTab === 'search' && (
                                 <div className="animate-fade">
                                     {dbMeta && <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2 mb-6 flex justify-between items-center text-xs text-blue-800 animate-fade"><div className="flex gap-4"><span className="font-bold flex items-center gap-1"><Icon name="Clock" size={12}/> MAJ: {dbMeta.date}</span><span className="hidden md:inline">|</span><span className="flex items-center gap-1"><Icon name="User" size={12}/> {dbMeta.user}</span></div><div className="italic opacity-75 hidden md:block">Données synchronisées automatiquement</div></div>}
-                                    {/* BLOCK NOUVEAUTES */}
+                                    {dbHistory.length > 0 && <div className="bg-slate-900 text-white py-2 px-4 rounded-lg mb-6 shadow-md border border-slate-700 overflow-hidden relative"><div className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-slate-900 to-transparent w-10 z-10"></div><div className="absolute right-0 top-0 bottom-0 bg-gradient-to-l from-slate-900 to-transparent w-10 z-10"></div><div className="marquee-container"><div className="marquee-content flex gap-8">{dbHistory.map((h, i) => (<span key={i} className="inline-flex items-center gap-2 text-xs font-mono"><span className="text-blue-400">[{h.date}]</span><span className="font-bold text-yellow-400">{h.user}</span>:<span>{h.action}</span><span className="text-slate-600 mx-2">|</span></span>))}</div></div></div>}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                                         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
                                             <h3 className="text-xs font-bold uppercase text-slate-400 mb-4 flex items-center gap-2"><Icon name="BellRing" size={14}/> Dernières Mises à Jour & Rapports</h3>
                                             <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                                                {tarifs.filter(t => t.report && (t.report.changed?.length > 0 || t.report.added?.length > 0 || t.report.removed?.length > 0)).sort((a, b) => new Date(b.index_date || 0) - new Date(a.index_date || 0)).slice(0, 5).map((t, i) => (
+                                                {tarifs
+                                                    .filter(t => t.report && (t.report.changed.length > 0 || t.report.added.length > 0 || t.report.removed.length > 0))
+                                                    .sort((a, b) => new Date(b.index_date || 0) - new Date(a.index_date || 0))
+                                                    .slice(0, 5)
+                                                    .map((t, i) => (
                                                     <div key={i} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
                                                         <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center font-bold text-orange-600 shrink-0"><Icon name="TrendingUp" size={18}/></div>
                                                         <div className="flex-1 min-w-0">
@@ -865,19 +1241,128 @@
                                                         <button onClick={() => setViewingReport(t.report)} className="px-3 py-1.5 bg-white text-blue-600 text-xs font-bold rounded-lg border border-slate-200 hover:bg-blue-50 transition-colors shrink-0">Consulter les nouveautés</button>
                                                     </div>
                                                 ))}
-                                                {tarifs.filter(t => t.report && (t.report.changed?.length > 0 || t.report.added?.length > 0 || t.report.removed?.length > 0)).length === 0 && <div className="text-center text-slate-400 py-4 text-xs italic">Aucune modification récente détectée.</div>}
+                                                {tarifs.filter(t => t.report && (t.report.changed.length > 0 || t.report.added.length > 0 || t.report.removed.length > 0)).length === 0 && (
+                                                    <div className="text-center text-slate-400 py-4 text-xs italic">Aucune modification récente détectée.</div>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"><h3 className="text-xs font-bold uppercase text-slate-400 mb-4 flex items-center gap-2"><Icon name="PieChart" size={14}/> Base de Données</h3><div className="flex gap-4 items-center h-full pb-4"><div className="flex-1 text-center p-4 bg-green-50 rounded-xl"><div className="text-2xl font-black text-green-600">{tarifs.length}</div><div className="text-xs font-bold text-green-800 uppercase">Tarifs</div></div><div className="flex-1 text-center p-4 bg-indigo-50 rounded-xl"><div className="text-2xl font-black text-indigo-600">{fiches.length}</div><div className="text-xs font-bold text-indigo-800 uppercase">Fiches</div></div><div className="flex-1 text-center p-4 bg-blue-50 rounded-xl"><div className="text-2xl font-black text-blue-600">{tarifs.reduce((acc,t)=>acc+(t.products?.length||0),0)}</div><div className="text-xs font-bold text-blue-800 uppercase">Produits</div></div></div></div>
                                     </div>
                                     <div className="max-w-3xl mx-auto text-center mb-10"><div className="relative group z-10"><input className="w-full p-5 pl-14 rounded-2xl border border-slate-200 shadow-xl shadow-slate-100 focus:ring-4 focus:ring-blue-50 outline-none text-lg font-medium transition-all" placeholder="Rechercher un produit ou une fiche..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} autoFocus /><div className="absolute left-5 top-5 text-slate-300 group-focus-within:text-blue-500 transition-colors"><Icon name="Search" size={24} /></div></div><div className="mt-4 flex justify-center"><button onClick={() => uploadInputRef.current.click()} disabled={isUploading} className="text-xs font-bold text-slate-400 hover:text-blue-600 flex items-center gap-2 transition-colors bg-slate-50 hover:bg-blue-50 px-3 py-1.5 rounded-full"><Icon name={isUploading ? "Loader2" : "UploadCloud"} size={14} className={isUploading ? "animate-spin" : ""}/>{isUploading ? "Envoi..." : "Ajouter Fiche PDF"}</button><input type="file" ref={uploadInputRef} onChange={handleUploadFiche} accept="application/pdf" className="hidden" /></div></div>
-                                    <div className="space-y-8 pb-20">{searchResults.products.length > 0 && (<div className="animate-fade"><h3 className="text-sm font-bold uppercase text-slate-400 mb-4 pl-2 flex items-center gap-2"><Icon name="Box" size={16}/> Tarifs ({searchResults.products.length})</h3><div className="space-y-3">{searchResults.products.map((res, i) => { const isTaxable = res.name && (res.name.trim().startsWith('*') || res.name.trim().endsWith('*')); const priceVal = parsePrice(res.price); const validPrice = !isNaN(priceVal); const priceHT = validPrice ? priceVal.toFixed(2) : res.price; const priceTTC = validPrice ? (priceVal * 1.20).toFixed(2) : null; const t4Rate = res.t4_percentage || 0; const basePriceForT4 = isTaxable ? (validPrice ? priceVal * 1.20 : 0) : priceVal; const priceT4 = validPrice ? (basePriceForT4 * (1 - t4Rate/100)).toFixed(2) : null; const pricesObj = { ht: validPrice ? priceHT : null, ttc: isTaxable ? priceTTC : null, t4: (t4Rate > 0 && validPrice) ? priceT4 : null }; return (<div key={i} className="bg-white p-5 rounded-2xl border border-slate-100 hover:border-blue-300 hover:shadow-lg transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group"><div className="flex items-start gap-4"><div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-blue-50 text-blue-600"><Icon name="Tag" size={20}/></div><div><div className="font-bold text-slate-800 text-lg">{res.name}{res.packaging && <span className="ml-2 text-sm font-normal text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">en {res.packaging}</span>}</div><div className="flex flex-wrap items-center gap-2 mt-2"><span className="bg-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 flex items-center gap-1"><Icon name="Folder" size={12}/> {res.source}</span><span className="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 bg-green-50 text-green-600 border border-green-100"><Icon name="Calendar" size={12}/> {res.date_tarif}</span>{t4Rate > 0 && <span className="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 bg-orange-50 text-orange-600 border border-orange-100"><Icon name="Percent" size={12}/> T4: -{t4Rate}%</span>}</div></div></div><div className="flex items-center justify-between md:justify-end gap-3 pl-14 md:pl-0"><div className="text-right mr-4">{validPrice && isTaxable ? (<div className="flex flex-col items-end"><div className="text-sm font-bold text-slate-400">{priceHT} <span className="text-[10px]">HT</span></div><div className="text-xl font-bold text-slate-700 whitespace-nowrap">{priceTTC} <span className="text-xs text-slate-400 font-bold">TTC</span></div>{t4Rate > 0 && <div className="text-2xl font-black text-orange-500 whitespace-nowrap">{priceT4} <span className="text-xs text-orange-300 font-bold">T4</span></div>}</div>) : (<div className="flex flex-col items-end"><div className="text-xl font-bold text-green-600 whitespace-nowrap">{priceHT} <span className="text-xs text-green-800 font-bold">{validPrice ? 'EXO' : (res.unit || 'DH')}</span></div>{t4Rate > 0 && validPrice && <div className="text-2xl font-black text-orange-500 whitespace-nowrap">{priceT4} <span className="text-xs text-orange-300 font-bold">T4</span></div>}</div>)}{validPrice && <div className="text-xs text-slate-400 font-bold mt-1 text-right">{res.unit || 'DH'}</div>}</div><div className="flex gap-2">{validPrice && <button onClick={() => openCalculator(res, pricesObj)} className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm" title="Calculatrice"><Icon name="Calculator" size={16}/></button>}{res.report && <button onClick={() => setViewingReport(res.report)} className="bg-orange-50 hover:bg-orange-100 text-orange-600 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm border border-orange-200" title="Consulter Différence Tarifs"><Icon name="TrendingUp" size={16}/></button>}<button onClick={() => openFile(res.path, res.source)} className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm"><Icon name="Eye" size={14}/> Voir</button></div></div></div>);})}</div></div>)}{searchResults.fiches.length > 0 && (<div className="animate-fade"><h3 className="text-sm font-bold uppercase text-slate-400 mb-4 pl-2 flex items-center gap-2 border-t pt-6 mt-6 md:border-none md:pt-0 md:mt-0"><Icon name="FileText" size={16}/> Fiches ({searchResults.fiches.length})</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{searchResults.fiches.map((f, i) => (<div key={i} className="bg-white p-4 rounded-2xl border border-slate-100 hover:border-indigo-300 hover:shadow-md transition-all flex items-center justify-between group"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0"><Icon name="FileText" size={20}/></div><div className="truncate pr-4"><div className="font-bold text-slate-700 truncate">{f.name}</div><div className="text-xs text-slate-400">PDF</div></div></div><button onClick={() => openFile(f.path, f.name)} className="p-2 text-slate-400 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 rounded-lg transition-colors"><Icon name="Eye" size={18}/></button></div>))}</div></div>)}</div></div>)}</div>
+                                    <div className="space-y-8 pb-20">
+                                        {searchResults.products.length > 0 && (
+                                            <div className="animate-fade">
+                                                <h3 className="text-sm font-bold uppercase text-slate-400 mb-4 pl-2 flex items-center gap-2"><Icon name="Box" size={16}/> Tarifs ({searchResults.products.length})</h3>
+                                                <div className="space-y-3">
+                                                    {searchResults.products.map((res, i) => {
+                                                        const isTaxable = res.name && (res.name.trim().startsWith('*') || res.name.trim().endsWith('*'));
+                                                        const priceVal = parsePrice(res.price);
+                                                        const validPrice = priceVal > 0;
+                                                        const priceHT = validPrice ? priceVal.toFixed(2) : res.price;
+                                                        const priceTTC = validPrice ? (priceVal * 1.20).toFixed(2) : null;
+                                                        const t4Rate = res.t4_percentage || 0;
+                                                        const basePriceForT4 = isTaxable ? (validPrice ? priceVal * 1.20 : 0) : priceVal;
+                                                        const priceT4 = validPrice ? (basePriceForT4 * (1 - t4Rate/100)).toFixed(2) : null;
+                                                        const pricesObj = { ht: validPrice ? priceHT : null, ttc: isTaxable ? priceTTC : null, t4: (t4Rate > 0 && validPrice) ? priceT4 : null };
+                                                        return (
+                                                            <div key={i} className="bg-white p-5 rounded-2xl border border-slate-100 hover:border-blue-300 hover:shadow-lg transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group">
+                                                                <div className="flex items-start gap-4"><div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-blue-50 text-blue-600"><Icon name="Tag" size={20}/></div><div><div className="font-bold text-slate-800 text-lg">{res.name}{res.packaging && <span className="ml-2 text-sm font-normal text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">en {res.packaging}</span>}</div><div className="flex flex-wrap items-center gap-2 mt-2"><span className="bg-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 flex items-center gap-1"><Icon name="Folder" size={12}/> {res.source}</span><span className="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 bg-green-50 text-green-600 border border-green-100"><Icon name="Calendar" size={12}/> {res.date_tarif}</span>{t4Rate > 0 && <span className="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 bg-orange-50 text-orange-600 border border-orange-100"><Icon name="Percent" size={12}/> T4: -{t4Rate}%</span>}</div></div></div>
+                                                                <div className="flex items-center justify-between md:justify-end gap-3 pl-14 md:pl-0">
+                                                                    <div className="text-right mr-4">
+                                                                        {validPrice && isTaxable ? (<div className="flex flex-col items-end"><div className="text-sm font-bold text-slate-400">{priceHT} <span className="text-[10px]">HT</span></div><div className="text-xl font-bold text-slate-700 whitespace-nowrap">{priceTTC} <span className="text-xs text-slate-400 font-bold">TTC</span></div>{t4Rate > 0 && <div className="text-2xl font-black text-orange-500 whitespace-nowrap">{priceT4} <span className="text-xs text-orange-300 font-bold">T4</span></div>}</div>) : (<div className="flex flex-col items-end"><div className="text-xl font-bold text-green-600 whitespace-nowrap">{priceHT} <span className="text-xs text-green-800 font-bold">{validPrice ? 'EXO' : (res.unit || 'DH')}</span></div>{t4Rate > 0 && validPrice && <div className="text-2xl font-black text-orange-500 whitespace-nowrap">{priceT4} <span className="text-xs text-orange-300 font-bold">T4</span></div>}</div>)}
+                                                                        {validPrice && <div className="text-xs text-slate-400 font-bold mt-1 text-right">{res.unit || 'DH'}</div>}
+                                                                    </div>
+                                                                    <div className="flex gap-2">
+                                                                        {validPrice && <button onClick={() => openCalculator(res, pricesObj)} className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm" title="Calculatrice"><Icon name="Calculator" size={16}/></button>}
+                                                                        {res.report && <button onClick={() => setViewingReport(res.report)} className="bg-orange-50 hover:bg-orange-100 text-orange-600 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm border border-orange-200" title="Consulter Différence Tarifs"><Icon name="TrendingUp" size={16}/></button>}
+                                                                        <button onClick={() => openFile(res.path, res.source)} className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm"><Icon name="Eye" size={14}/> Voir</button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {searchResults.fiches.length > 0 && (
+                                            <div className="animate-fade">
+                                                <h3 className="text-sm font-bold uppercase text-slate-400 mb-4 pl-2 flex items-center gap-2 border-t pt-6 mt-6 md:border-none md:pt-0 md:mt-0"><Icon name="FileText" size={16}/> Fiches ({searchResults.fiches.length})</h3>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    {searchResults.fiches.map((f, i) => (<div key={i} className="bg-white p-4 rounded-2xl border border-slate-100 hover:border-indigo-300 hover:shadow-md transition-all flex items-center justify-between group"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0"><Icon name="FileText" size={20}/></div><div className="truncate pr-4"><div className="font-bold text-slate-700 truncate">{f.name}</div><div className="text-xs text-slate-400">PDF</div></div></div><button onClick={() => openFile(f.path, f.name)} className="p-2 text-slate-400 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 rounded-lg transition-colors"><Icon name="Eye" size={18}/></button></div>))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             )}
 
+                            {/* ADMIN TAB */}
+                            {activeTab === 'admin' && currentUser.role === 'admin' && (
+                                <div className="animate-fade grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                    <div className="lg:col-span-1 space-y-6">
+                                        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                                            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-slate-800"><Icon name="Settings" /> Paramètres</h3>
+                                            <div className="space-y-4">
+                                                <div className="grid gap-1"><label className="text-[10px] font-bold uppercase text-slate-400">Token Dropbox</label><input type="password" value={dbxConfig.token} onChange={e => setDbxConfig({...dbxConfig, token: e.target.value})} className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono" /></div>
+                                                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100"><label className="text-[10px] font-bold uppercase text-blue-700 block mb-2">Connexion Permanente (OAuth)</label><div className="grid gap-1 mb-2"><input value={dbxConfig.appKey} onChange={e => setDbxConfig({...dbxConfig, appKey: e.target.value})} className="p-2 bg-white border border-blue-200 rounded text-xs" placeholder="App Key"/></div><div className="grid gap-1 mb-2"><input type="password" value={dbxConfig.appSecret} onChange={e => setDbxConfig({...dbxConfig, appSecret: e.target.value})} className="p-2 bg-white border border-blue-200 rounded text-xs" placeholder="App Secret"/></div>{dbxConfig.appKey && (<a href={`https://www.dropbox.com/oauth2/authorize?client_id=${dbxConfig.appKey}&token_access_type=offline&response_type=code`} target="_blank" className="block w-full text-center bg-blue-600 text-white py-2 rounded-lg text-xs font-bold mb-2 hover:bg-blue-700">1. Autoriser l'App</a>)}<div className="flex gap-2"><input value={authCode} onChange={e => setAuthCode(e.target.value)} className="flex-1 p-2 border rounded-lg text-xs" placeholder="2. Coller le Code"/><button onClick={handleExchangeCode} disabled={syncStatus === 'working'} className="bg-green-600 text-white px-3 rounded-lg hover:bg-green-700 font-bold text-xs">Valider</button></div>{dbxConfig.refreshToken && (<div className="mt-3 bg-white p-2 rounded border border-green-200"><div className="text-[10px] text-green-600 font-bold mb-1">✅ Token Permanent Actif</div><label className="text-[9px] font-bold uppercase text-slate-400 block mb-1">REFRESH TOKEN (A COPIER DANS LE CODE)</label><div className="flex items-center gap-2"><input readOnly value={dbxConfig.refreshToken} className="flex-1 p-1 bg-slate-50 border border-slate-200 rounded text-[10px] font-mono text-slate-500 select-all" onClick={e => e.target.select()}/><button onClick={() => { copyToClipboard(dbxConfig.refreshToken); showToast("Copié !", 'success'); }} className="p-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-500" title="Copier"><Icon name="Copy" size={12}/></button></div></div>)}</div>
+                                                <div className="grid gap-1"><label className="text-[10px] font-bold uppercase text-slate-400">Clé Gemini</label><input type="password" value={dbxConfig.geminiKey} onChange={e => setDbxConfig({...dbxConfig, geminiKey: e.target.value})} className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono" /></div><div className="grid gap-1"><label className="text-[10px] font-bold uppercase text-slate-400">Dossier Tarifs</label><input value={dbxConfig.pathTarifs} onChange={e => setDbxConfig({...dbxConfig, pathTarifs: e.target.value})} className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs" /></div><div className="grid gap-1"><label className="text-[10px] font-bold uppercase text-slate-400">Dossier Fiches</label><input value={dbxConfig.pathFT} onChange={e => setDbxConfig({...dbxConfig, pathFT: e.target.value})} className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs" /></div>
+                                                <div className="pt-4 mt-4 border-t border-slate-100 flex flex-col gap-2"><button onClick={handleManualCloudSave} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors shadow-sm"><Icon name="CloudUpload" size={14}/> Publier la Base sur le Cloud (MàJ)</button><button onClick={handleLocalExport} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors"><Icon name="HardDriveDownload" size={14}/> Télécharger Backup Local (Secours)</button></div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-slate-900 text-green-400 p-5 rounded-3xl font-mono text-xs h-60 overflow-y-auto shadow-inner"><div className="opacity-50 border-b border-green-800 pb-2 mb-2">System Logs</div><div className="whitespace-pre-wrap">{syncLog || "Prêt."}</div></div>
+                                    </div>
+                                    {showAdminUploadModal && (<div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4"><div className="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full animate-fade relative"><button onClick={() => setShowAdminUploadModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><Icon name="X"/></button><div className="mb-6"><div className="inline-flex bg-blue-100 p-3 rounded-full text-blue-600 mb-3"><Icon name="FilePlus" size={24}/></div><h2 className="text-xl font-bold">Gestion Tarifs</h2><p className="text-sm text-slate-500">Ajouter ou remplacer un catalogue</p></div><form onSubmit={handleManualTarifUpload} className="space-y-4"><div className="flex bg-slate-50 p-1 rounded-xl"><button type="button" onClick={() => setAdminUploadMode('new')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${adminUploadMode === 'new' ? 'bg-white shadow text-blue-600' : 'text-slate-400'}`}>Nouveau</button><button type="button" onClick={() => setAdminUploadMode('update')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${adminUploadMode === 'update' ? 'bg-white shadow text-blue-600' : 'text-slate-400'}`}>Mise à jour</button></div>{adminUploadMode === 'update' && (<div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Tarif à remplacer</label><select className="w-full p-3 border rounded-xl text-sm bg-white" required value={targetTarifId} onChange={e => setTargetTarifId(e.target.value)}><option value="">-- Choisir --</option>{tarifs.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>)}<div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Fichier PDF</label><input type="file" accept="application/pdf" required ref={adminFileInputRef} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/></div><div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Remise T4 (%)</label><input type="number" min="0" max="100" step="0.1" value={t4Value} onChange={e => setT4Value(e.target.value)} className="w-full p-3 border rounded-xl text-sm bg-slate-50 font-mono text-orange-600 font-bold" placeholder="0.0"/><p className="text-[10px] text-slate-400 mt-1">Sera déduit du prix TTC ou EXO pour l'affichage.</p></div><button disabled={syncStatus === 'working'} className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold mt-2 hover:bg-slate-900 disabled:opacity-50 flex items-center justify-center gap-2">{syncStatus === 'working' ? <Icon name="Loader2" className="animate-spin"/> : <Icon name="UploadCloud"/>} Valider</button></form></div></div>)}
+                                    <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[600px]"><div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50"><h3 className="font-bold text-lg text-slate-800">Indexation</h3><div className="flex gap-2"><button onClick={handleDeleteAllTarifs} className="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 transition-colors"><Icon name="Trash2" size={14}/> Tout Supprimer</button><button onClick={() => { setAdminUploadMode('new'); setShowAdminUploadModal(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all active:scale-95"><Icon name="Plus"/> Gestion Tarifs</button><button onClick={() => handleSyncFiches()} disabled={syncStatus === 'working'} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:opacity-50"><Icon name={syncStatus === 'working' ? "Loader2" : "RefreshCw"} className={syncStatus === 'working' ? "animate-spin" : ""}/> Scan/Sync Fiches</button></div></div><div className="flex-1 overflow-auto p-0"><table className="w-full text-sm text-left"><thead className="bg-white sticky top-0 shadow-sm text-slate-500 font-bold text-[10px] uppercase"><tr><th className="p-4">Fichier</th><th className="p-4">Type</th><th className="p-4 text-center">Info</th><th className="p-4 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-50">{tarifs.map(t => (<tr key={t.id} className="hover:bg-blue-50/30 group"><td className="p-4 font-bold text-slate-700">{t.name}</td><td className="p-4"><span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">TARIF</span></td><td className="p-4 text-center"><div className="text-blue-600 font-bold">{t.products?.length} produits</div>{t.t4_percentage > 0 && <div className="text-xs text-orange-500 font-bold">T4: -{t.t4_percentage}%</div>}</td><td className="p-4 text-right"><div className="flex justify-end gap-2">{t.report && <button onClick={() => setViewingReport(t.report)} className="p-2 text-orange-500 hover:text-orange-700 bg-orange-50 rounded-lg" title="Voir Rapport Fluctuation"><Icon name="TrendingUp" size={16}/></button>}<button onClick={() => handleDeleteEntry('tarif', t.id, t.name)} className="text-slate-300 hover:text-red-500 transition-colors p-2" title="Supprimer"><Icon name="Trash2" size={16}/></button></div></td></tr>))}{fiches.map(f => (<tr key={f.id} className="hover:bg-indigo-50/30 group"><td className="p-4 font-bold text-slate-700">{f.name}</td><td className="p-4"><span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold">FICHE</span></td><td className="p-4 text-center text-slate-400">PDF</td><td className="p-4 text-right"><button onClick={() => handleDeleteEntry('fiche', f.id, f.name)} className="text-slate-300 hover:text-red-500 transition-colors p-2" title="Supprimer"><Icon name="Trash2" size={16}/></button></td></tr>))}</tbody></table></div></div></div>
+                            )}
+
+                            {/* SECURITY TAB */}
+                            {activeTab === 'security' && currentUser.role === 'admin' && (
+                                <div className="max-w-4xl mx-auto space-y-8 animate-fade">
+                                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                                        <h3 className="font-bold text-lg mb-6 flex items-center gap-2"><Icon name="Shield" /> Demandes d'autorisation ({pendingRequests.length})</h3>
+                                        {pendingRequests.length === 0 ? (
+                                            <div className="text-center py-8 text-slate-400 italic text-sm">Aucune demande en attente.</div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {pendingRequests.map((req, i) => (
+                                                    <div key={i} className="flex flex-col md:flex-row items-center justify-between bg-orange-50 p-4 rounded-2xl border border-orange-100 gap-4">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-10 h-10 bg-orange-200 text-orange-700 rounded-full flex items-center justify-center font-bold"><Icon name="User"/></div>
+                                                            <div>
+                                                                <div className="font-bold text-slate-800">{req.user} <span className="text-xs font-normal text-slate-500">({req.login})</span></div>
+                                                                <div className="text-xs font-mono text-slate-500 bg-white px-2 py-1 rounded border border-orange-200 mt-1 max-w-[250px] truncate" title={req.deviceId}>{req.deviceId}</div>
+                                                                <div className="text-[10px] text-slate-400 mt-1">{req.date}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex gap-2 w-full md:w-auto">
+                                                            <button onClick={() => handleRejectDevice(req)} className="flex-1 md:flex-none px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl font-bold text-xs transition-colors">Rejeter</button>
+                                                            <button onClick={() => handleApproveDevice(req)} className="flex-1 md:flex-none px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-xl font-bold text-xs shadow-lg shadow-green-200 transition-colors">Autoriser</button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 opacity-80">
+                                        <h3 className="font-bold text-lg mb-6 flex items-center gap-2 text-slate-500"><Icon name="Smartphone" /> Appareils Autorisés ({authorizedDevices.length})</h3>
+                                        <div className="max-h-60 overflow-y-auto space-y-2">
+                                            {authorizedDevices.map((dev, i) => (
+                                                <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                                    <div className="font-mono text-xs text-slate-600 truncate max-w-xs">{dev}</div>
+                                                    <button onClick={() => handleRevokeDevice(dev)} className="text-xs font-bold text-red-400 hover:text-red-600 flex items-center gap-1"><Icon name="XCircle" size={14}/> Révoquer</button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* USERS TAB */}
                             {activeTab === 'users' && currentUser.role === 'admin' && (
                                 <div className="max-w-xl mx-auto space-y-8 animate-fade">
                                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-                                        <h3 className="font-bold text-lg mb-6 flex items-center gap-2"><Icon name="Editing" size={24} className="text-blue-600"/>{editingUserIdx !== null ? "Modifier un utilisateur" : "Ajouter un utilisateur"}</h3>
+                                        <h3 className="font-bold text-lg mb-6 flex items-center gap-2"><Icon name={editingUserIdx !== null ? "Edit" : "UserPlus"}/> {editingUserIdx !== null ? "Modifier" : "Créer un accès"}</h3>
                                         <form onSubmit={handleUserSubmit} className="grid gap-4">
                                             <div className="grid grid-cols-2 gap-4"><input value={userFormData.name} onChange={e => setUserFormData({...userFormData, name: e.target.value})} name="name" placeholder="Nom Complet" required className="p-3 border rounded-xl text-sm" /><select value={userFormData.role} onChange={e => setUserFormData({...userFormData, role: e.target.value})} name="role" className="p-3 border rounded-xl text-sm bg-white"><option value="viewer">Collaborateur</option><option value="admin">Administrateur</option></select></div>
                                             <div className="grid grid-cols-2 gap-4"><input value={userFormData.login} onChange={e => setUserFormData({...userFormData, login: e.target.value})} name="login" placeholder="Identifiant" required className="p-3 border rounded-xl text-sm" /><input value={userFormData.pass} onChange={e => setUserFormData({...userFormData, pass: e.target.value})} name="pass" placeholder="Mot de passe" required className="p-3 border rounded-xl text-sm" /></div>
@@ -889,7 +1374,14 @@
                                         {users.map((u, i) => (
                                             <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl group">
                                                 <div className="flex items-center gap-3"><div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${u.role === 'admin' ? 'bg-slate-800' : 'bg-blue-500'}`}>{u.name.charAt(0)}</div><div><div className="font-bold text-slate-800">{u.name}</div><div className="text-xs text-slate-500 font-mono flex items-center gap-2"><span>{u.id}</span><span className="text-slate-300">|</span><button onClick={() => setShowPassword({...showPassword, [i]: !showPassword[i]})} className="flex items-center gap-1 hover:text-blue-600 transition-colors">{showPassword[i] ? u.pass : "••••••"}<Icon name={showPassword[i] ? "EyeOff" : "Eye"} size={10}/></button></div></div></div>
-                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => { setUserFormData({ name: u.name, login: u.id, pass: u.pass, role: u.role }); setEditingUserIdx(i); }} className="p-2 text-blue-400 hover:text-blue-600 bg-blue-50 rounded-lg"><Icon name="Edit2" size={16}/></button><button onClick={() => { if(confirm('Supprimer ?')) setUsers(users.filter((_, idx) => idx !== i)); }} className="p-2 text-red-400 hover:text-red-600 bg-red-50 rounded-lg"><Icon name="Trash2" size={16}/></button></div>
+                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    {u.id !== 'SUPERADMIN' && (
+                                                        <>
+                                                            <button onClick={() => { setUserFormData({ name: u.name, login: u.id, pass: u.pass, role: u.role }); setEditingUserIdx(i); }} className="p-2 text-blue-400 hover:text-blue-600 bg-blue-50 rounded-lg"><Icon name="Edit2" size={16}/></button>
+                                                            <button onClick={() => { if(confirm('Supprimer ?')) setUsers(users.filter((_, idx) => idx !== i)); }} className="p-2 text-red-400 hover:text-red-600 bg-red-50 rounded-lg"><Icon name="Trash2" size={16}/></button>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
